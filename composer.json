@@ -14,17 +14,10 @@
   },
   "authors": [
     {
-      "name": "Unknonw"
+      "name": "Unknonw-Dev"
     }
   ],
   "require-dev": {
     "orchestra/testbench": "^8.0.6"
-  },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "XLSXWriter\\XLSXWriterServiceProvider"
-      ]
-    }
   }
 }
