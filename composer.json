@@ -1,0 +1,30 @@
+{
+  "name": "xlsxwriter/excel",
+  "description": "Convert data to excel file",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.2"
+  },
+  "minimum-stability": "stable",
+  "autoload": {
+    "psr-4": {
+      "Xlsxwriter\\": "src/XLSXWriter/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Unknonw"
+    }
+  ],
+  "require-dev": {
+    "orchestra/testbench": "^8.0.6"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "XLSXWriter\\XLSXWriterServiceProvider"
+      ]
+    }
+  }
+}
