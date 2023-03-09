@@ -9,7 +9,7 @@
   "minimum-stability": "stable",
   "autoload": {
     "psr-4": {
-      "Xlsxwriter\\": "src/XLSXWriter/"
+      "XLSXWriter\\": "src/XLSXWriter/"
     }
   },
   "authors": [
