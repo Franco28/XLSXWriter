@@ -469,7 +469,7 @@ class XLSXWriter
 
         $maxCell = self::xlsCell($sheet->row_count - 1, count($sheet->columns) - 1);
 
-        if ($sheet->autoFilter) {
+        if ($sheet->auto_filter) {
             $sheet->file_writer->write('<autoFilter ref="A1:' . $maxCell . '"/>');
         }
 
