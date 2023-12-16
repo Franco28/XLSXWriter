@@ -30,6 +30,7 @@ class XLSXWriter
 
     protected $columnWidths = [];
     protected $font = [];
+    protected $enableBorders = false;
 
     public function __construct()
     {
@@ -88,6 +89,11 @@ class XLSXWriter
     public function setRightToLeft($isRightToLeft = false)
     {
         $this->isRightToLeft = $isRightToLeft;
+    }
+
+    public function setEnableBorders($enableBorders)
+    {
+        $this->enableBorders = $enableBorders;
     }
 
     public function __destruct()
@@ -717,6 +723,18 @@ class XLSXWriter
         $styles_xml .= '<sz val="' . $this->font['size'] . '"/>';
         $styles_xml .= '</font>';
         $styles_xml .= '</fonts>';
+
+        if ($this->enableBorders) {
+            $styles_xml .= '<borders count="1">';
+            $styles_xml .= '<border>';
+            $styles_xml .= '<left/>';
+            $styles_xml .= '<right/>';
+            $styles_xml .= '<top/>';
+            $styles_xml .= '<bottom/>';
+            $styles_xml .= '</border>';
+            $styles_xml .= '</borders>';
+        }
+
         $styles_xml .= '<fills><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>';
         $styles_xml .= '<borders><border diagonalDown="false" diagonalUp="false"><left/><right/><top/><bottom/><diagonal/></border></borders>';
         $styles_xml .= '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="true"><alignment horizontal="general" vertical="bottom"/></xf></cellStyleXfs>';
