@@ -483,8 +483,8 @@ class XLSXWriter
         $sheet->file_writer->write('</worksheet>');
 
         $maxCellTag = '<dimension ref="A1:' . $maxCell . '"/>';
-        $paddingLength = $sheet->maxCellTagEnd - $sheet->maxCellTagStart - strlen($maxCellTag);
-        $sheet->file_writer->fseek($sheet->maxCellTagStart);
+        $paddingLength = $sheet->max_cell_tag_end - $sheet->max_cell_tag_start - strlen($maxCellTag);
+        $sheet->file_writer->fseek($sheet->max_cell_tag_start);
         $sheet->file_writer->write($maxCellTag . str_repeat(" ", $paddingLength));
         $sheet->file_writer->close();
         $sheet->finalized = true;
