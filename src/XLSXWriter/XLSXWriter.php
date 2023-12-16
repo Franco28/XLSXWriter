@@ -309,7 +309,6 @@ class XLSXWriter
     {
         $column_types = array();
         foreach ($header_types as $v) {
-            var_dump($v);
             $number_format = self::numberFormatStandardized($v);
             $number_format_type = self::determineNumberFormatType($number_format);
             $cell_style_idx = $this->addCellStyle($number_format, $style_string = null);
@@ -425,7 +424,8 @@ class XLSXWriter
             $number_format = $sheet->columns[$c]['number_format'];
             $number_format_type = $sheet->columns[$c]['number_format_type'];
             $cell_style_idx = empty($style) ? $sheet->columns[$c]['default_cell_style'] : $this->addCellStyle($number_format, json_encode(isset($style[0]) ? $style[$c] : $style));
-            $this->writeCell($sheet->file_writer, $sheet->row_count, $c, $v, $number_format_type, $cell_style_idx);
+
+            $this->writeCell($sheet->file_writer, 0, $c, strval($v), $number_format_type, $cell_style_idx);
             $c++;
         }
 
@@ -557,11 +557,14 @@ class XLSXWriter
         } elseif ($num_format_type == 'n_numeric') {
             $file->write('<c r="' . $cell_name . '" s="' . $cell_style_idx . '" t="n"><v>' . self::xmlspecialchars($value) . '</v></c>'); //int,float,currency
         } elseif ($num_format_type == 'n_string') {
+            if (is_array($value)) {
+                $value = implode(', ', $value);
+            }
             $file->write('<c r="' . $cell_name . '" s="' . $cell_style_idx . '" t="inlineStr"><is><t>' . self::xmlspecialchars($value) . '</t></is></c>');
-        } elseif ($num_format_type == 'n_auto' || 1) { //auto-detect unknown column types
+        } elseif ($num_format_type == 'n_auto' || 1) {
             if (!is_string($value) || $value == '0' || ($value[0] != '0' && ctype_digit($value)) || preg_match("/^\-?(0|[1-9][0-9]*)(\.[0-9]+)?$/", $value)) {
                 $file->write('<c r="' . $cell_name . '" s="' . $cell_style_idx . '" t="n"><v>' . self::xmlspecialchars($value) . '</v></c>'); //int,float,currency
-            } else { //implied: ($cell_format=='string')
+            } else {
                 $file->write('<c r="' . $cell_name . '" s="' . $cell_style_idx . '" t="inlineStr"><is><t>' . self::xmlspecialchars($value) . '</t></is></c>');
             }
         }
@@ -1022,8 +1025,10 @@ class XLSXWriter
         else if ($num_format == 'price')    $num_format = '#,##0.00';
         else if ($num_format == 'dollar')   $num_format = '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
         else if ($num_format == 'euro')     $num_format = '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
+
         $ignore_until = '';
         $escaped = '';
+
         for ($i = 0, $ix = strlen($num_format); $i < $ix; $i++) {
             $c = $num_format[$i];
             if ($ignore_until == '' && $c == '[')
