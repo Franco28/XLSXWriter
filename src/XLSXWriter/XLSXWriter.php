@@ -249,6 +249,7 @@ class XLSXWriter
             'freeze_columns' => $freeze_columns,
             'finalized' => false,
         );
+
         $rightToLeftValue = $this->isRightToLeft ? 'true' : 'false';
         $sheet = &$this->sheets[$sheet_name];
         $tabselected = count($this->sheets) == 1 ? 'true' : 'false'; //only first sheet is selected
@@ -263,6 +264,7 @@ class XLSXWriter
         $sheet->max_cell_tag_end = $sheet->file_writer->ftell();
         $sheet->file_writer->write('<sheetViews>');
         $sheet->file_writer->write('<sheetView colorId="64" defaultGridColor="true" rightToLeft="' . $rightToLeftValue . '" showFormulas="false" showGridLines="true" showOutlineSymbols="true" showRowColHeaders="true" showZeros="true" tabSelected="' . $tabselected . '" topLeftCell="A1" view="normal" windowProtection="false" workbookViewId="0" zoomScale="100" zoomScaleNormal="100" zoomScalePageLayoutView="100">');
+
         if ($sheet->freeze_rows && $sheet->freeze_columns) {
             $sheet->file_writer->write('<pane ySplit="' . $sheet->freeze_rows . '" xSplit="' . $sheet->freeze_columns . '" topLeftCell="' . self::xlsCell($sheet->freeze_rows, $sheet->freeze_columns) . '" activePane="bottomRight" state="frozen"/>');
             $sheet->file_writer->write('<selection activeCell="' . self::xlsCell($sheet->freeze_rows, 0) . '" activeCellId="0" pane="topRight" sqref="' . self::xlsCell($sheet->freeze_rows, 0) . '"/>');
@@ -277,16 +279,19 @@ class XLSXWriter
         } else { // not frozen
             $sheet->file_writer->write('<selection activeCell="A1" activeCellId="0" pane="topLeft" sqref="A1"/>');
         }
+
         $sheet->file_writer->write('</sheetView>');
         $sheet->file_writer->write('</sheetViews>');
         $sheet->file_writer->write('<cols>');
         $i = 0;
+
         if (!empty($col_widths)) {
             foreach ($col_widths as $column_width) {
                 $sheet->file_writer->write('<col collapsed="false" hidden="false" max="' . ($i + 1) . '" min="' . ($i + 1) . '" style="0" customWidth="true" width="' . floatval($column_width) . '"/>');
                 $i++;
             }
         }
+
         $sheet->file_writer->write('<col collapsed="false" hidden="false" max="1024" min="' . ($i + 1) . '" style="0" customWidth="false" width="11.5"/>');
         $sheet->file_writer->write('</cols>');
         $sheet->file_writer->write('<sheetData>');
@@ -300,7 +305,7 @@ class XLSXWriter
         return $cell_style_idx;
     }
 
-    private function initializeColumnTypes($header_types)
+    private function initializeColumnTypes(array $header_types)
     {
         $column_types = array();
         foreach ($header_types as $v) {
@@ -313,6 +318,7 @@ class XLSXWriter
                 'default_cell_style' => $cell_style_idx,
             );
         }
+
         return $column_types;
     }
 
@@ -356,14 +362,17 @@ class XLSXWriter
         self::initializeSheet($sheet_name, $col_widths, $auto_filter, $freeze_rows, $freeze_columns);
         $sheet = &$this->sheets[$sheet_name];
         $sheet->columns = $this->initializeColumnTypes($header_types);
+
         if (!$suppress_row) {
             $header_row = array_keys($header_types);
 
             $sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . (1) . '">');
+
             foreach ($header_row as $c => $v) {
                 $cell_style_idx = empty($style) ? $sheet->columns[$c]['default_cell_style'] : $this->addCellStyle('GENERAL', json_encode(isset($style[0]) ? $style[$c] : $style));
-                $this->writeCell($sheet->file_writer, 0, $c, $v, $number_format_type = 'n_string', $cell_style_idx);
+                $this->writeCell($sheet->file_writer, 0, $c, strval($v), $number_format_type = 'n_string', $cell_style_idx);
             }
+
             $sheet->file_writer->write('</row>');
             $sheet->row_count++;
         }
