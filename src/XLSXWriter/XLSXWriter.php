@@ -993,46 +993,35 @@ class XLSXWriter
     //------------------------------------------------------------------
     private static function numberFormatStandardized($num_format)
     {
-        switch ($num_format) {
-            case 'money':
-                return 'dollar';
-            case 'number':
-                return 'integer';
-            case 'string':
-                return '@';
-            case 'integer':
-                return '0';
-            case 'date':
-                return 'YYYY-MM-DD';
-            case 'datetime':
-                return 'YYYY-MM-DD HH:MM:SS';
-            case 'time':
-                return 'HH:MM:SS';
-            case 'price':
-                return '#,##0.00';
-            case 'dollar':
-                return '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
-            case 'euro':
-                return '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
+        if ($num_format == 'money') {
+            $num_format = 'dollar';
+        }
+        if ($num_format == 'number') {
+            $num_format = 'integer';
         }
 
-        $ignoreUntil = '';
+        if ($num_format == 'string')   $num_format = '@';
+        else if ($num_format == 'integer')  $num_format = '0';
+        else if ($num_format == 'date')     $num_format = 'YYYY-MM-DD';
+        else if ($num_format == 'datetime') $num_format = 'YYYY-MM-DD HH:MM:SS';
+        else if ($num_format == 'time')     $num_format = 'HH:MM:SS';
+        else if ($num_format == 'price')    $num_format = '#,##0.00';
+        else if ($num_format == 'dollar')   $num_format = '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
+        else if ($num_format == 'euro')     $num_format = '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
+        $ignore_until = '';
         $escaped = '';
-
         for ($i = 0, $ix = strlen($num_format); $i < $ix; $i++) {
             $c = $num_format[$i];
-
-            if ($ignoreUntil == '' && ($c == '[' || $c == '"')) {
-                $ignoreUntil = $c;
-            } elseif ($ignoreUntil == $c) {
-                $ignoreUntil = '';
-            }
-
-            if ($ignoreUntil == '' && ($c == ' ' || $c == '-' || $c == '(' || $c == ')') && ($i == 0 || $num_format[$i - 1] != '_')) {
+            if ($ignore_until == '' && $c == '[')
+                $ignore_until = ']';
+            else if ($ignore_until == '' && $c == '"')
+                $ignore_until = '"';
+            else if ($ignore_until == $c)
+                $ignore_until = '';
+            if ($ignore_until == '' && ($c == ' ' || $c == '-'  || $c == '('  || $c == ')') && ($i == 0 || $num_format[$i - 1] != '_'))
                 $escaped .= "\\" . $c;
-            } else {
+            else
                 $escaped .= $c;
-            }
         }
 
         return $escaped;
