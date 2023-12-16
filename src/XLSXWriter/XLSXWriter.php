@@ -1073,17 +1073,19 @@ class XLSXWriter_BuffererWriter
     public function __construct($filename, $fd_fopen_flags = 'w', $check_utf8 = false)
     {
         $this->check_utf8 = $check_utf8;
-        $this->fd = fopen($filename, $fd_fopen_flags);
+        $this->fd = @fopen($filename, $fd_fopen_flags);
         if ($this->fd === false) {
-            XLSXWriter::log("Unable to open $filename for writing.");
+            throw new Exception("Unable to open $filename for writing.");
         }
     }
 
     public function write($string)
     {
-        $this->buffer .= $string;
-        if (isset($this->buffer[8191])) {
-            $this->purge();
+        if ($this->fd) {
+            $this->buffer .= $string;
+            if (isset($this->buffer[8191])) {
+                $this->purge();
+            }
         }
     }
 
@@ -1101,8 +1103,8 @@ class XLSXWriter_BuffererWriter
 
     public function close()
     {
-        $this->purge();
         if ($this->fd) {
+            $this->purge();
             fclose($this->fd);
             $this->fd = null;
         }
