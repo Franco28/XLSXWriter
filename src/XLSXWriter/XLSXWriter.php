@@ -28,6 +28,9 @@ class XLSXWriter
     protected $cell_styles = array();
     protected $number_formats = array();
 
+    protected $columnWidths = [];
+    protected $font = [];
+
     public function __construct()
     {
         defined('ENT_XML1') or define('ENT_XML1', 16); //for php 5.3, avoid fatal error
@@ -41,30 +44,47 @@ class XLSXWriter
     {
         $this->title = $title;
     }
+
     public function setSubject($subject = '')
     {
         $this->subject = $subject;
     }
+
     public function setAuthor($author = '')
     {
         $this->author = $author;
     }
+
     public function setCompany($company = '')
     {
         $this->company = $company;
     }
+
     public function setKeywords($keywords = '')
     {
         $this->keywords = $keywords;
     }
+
     public function setDescription($description = '')
     {
         $this->description = $description;
     }
+
     public function setTempDir($tempdir = '')
     {
         $this->tempdir = $tempdir;
     }
+
+    public function setColumnWidths($widths = ['A' => 50])
+    {
+        $this->columnWidths = $widths;
+    }
+
+    public function setFont($font = ['name' => 'Arial', 'size' => 12])
+    {
+        $this->font = $font;
+    }
+
     public function setRightToLeft($isRightToLeft = false)
     {
         $this->isRightToLeft = $isRightToLeft;
@@ -145,7 +165,8 @@ class XLSXWriter
             $zip->addFile($sheet->filename, "xl/worksheets/" . $sheet->xmlname);
         }
         $zip->addFromString("xl/workbook.xml", self::buildWorkbookXML());
-        $zip->addFile($this->writeStylesXML(), "xl/styles.xml");  //$zip->addFromString("xl/styles.xml"           , self::buildStylesXML() );
+        $zip->addFile($this->writeStylesXML(), "xl/styles.xml");
+        $zip->addFromString("xl/styles.xml", self::buildStylesXML());
         $zip->addFromString("[Content_Types].xml", self::buildContentTypesXML());
 
         $zip->addEmptyDir("xl/_rels/");
@@ -685,6 +706,27 @@ class XLSXWriter
         return $rels_xml;
     }
 
+    protected function buildStylesXML()
+    {
+        $styles_xml = "";
+        $styles_xml .= '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+        $styles_xml .= '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+        $styles_xml .= '<fonts count="1">';
+        $styles_xml .= '<font>';
+        $styles_xml .= '<name val="' . $this->font['name'] . '"/>';
+        $styles_xml .= '<sz val="' . $this->font['size'] . '"/>';
+        $styles_xml .= '</font>';
+        $styles_xml .= '</fonts>';
+        $styles_xml .= '<fills><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>';
+        $styles_xml .= '<borders><border diagonalDown="false" diagonalUp="false"><left/><right/><top/><bottom/><diagonal/></border></borders>';
+        $styles_xml .= '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="true"><alignment horizontal="general" vertical="bottom"/></xf></cellStyleXfs>';
+        $styles_xml .= '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>';
+        $styles_xml .= '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>';
+        $styles_xml .= '</styleSheet>';
+
+        return $styles_xml;
+    }
+
     protected function buildWorkbookXML()
     {
         $i = 0;
@@ -700,6 +742,14 @@ class XLSXWriter
             $i++;
         }
         $workbook_xml .= '</sheets>';
+
+        // Añadir información sobre el ancho de columnas según la configuración
+        $workbook_xml .= '<cols>';
+        foreach ($this->columnWidths as $col => $width) {
+            $workbook_xml .= '<col min="' . $col . '" max="' . $col . '" width="' . $width . '" customWidth="1"/>';
+        }
+        $workbook_xml .= '</cols>';
+
         $workbook_xml .= '<definedNames>';
         foreach ($this->sheets as $sheet_name => $sheet) {
             if ($sheet->auto_filter) {
