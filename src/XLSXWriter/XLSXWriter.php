@@ -835,9 +835,9 @@ class XLSXWriter
 
         if ($num_format == 'string')   $num_format = '@';
         else if ($num_format == 'integer')  $num_format = '0';
-        else if ($num_format == 'date')     $num_format = 'YYYY-MM-DD';
-        else if ($num_format == 'datetime') $num_format = 'YYYY-MM-DD HH:MM:SS';
-        else if ($num_format == 'time')     $num_format = 'HH:MM:SS';
+        else if ($num_format == 'date')     $num_format = '[YYYY-MM-DD]';
+        else if ($num_format == 'datetime') $num_format = '[YYYY-MM-DD HH:MM:SS]';
+        else if ($num_format == 'time')     $num_format = '[HH:MM:SS]';
         else if ($num_format == 'price')    $num_format = '#,##0.00';
         else if ($num_format == 'dollar')   $num_format = '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
         else if ($num_format == 'euro')     $num_format = '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
