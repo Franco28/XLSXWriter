@@ -996,6 +996,7 @@ class XLSXWriter
         if ($num_format == 'money') {
             $num_format = 'dollar';
         }
+        
         if ($num_format == 'number') {
             $num_format = 'integer';
         }
