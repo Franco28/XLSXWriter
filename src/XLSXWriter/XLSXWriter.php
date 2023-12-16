@@ -237,7 +237,7 @@ class XLSXWriter
             $zip->addFile($sheet->filename, "xl/worksheets/" . $sheet->xmlname);
         }
         $zip->addFromString("xl/workbook.xml", self::buildWorkbookXML());
-        $zip->addFile($this->writeStylesXML(), "xl/styles.xml");
+        //$zip->addFile($this->writeStylesXML(), "xl/styles.xml");
         $zip->addFromString("xl/styles.xml", self::buildStylesXML());
         $zip->addFromString("[Content_Types].xml", self::buildContentTypesXML());
 
