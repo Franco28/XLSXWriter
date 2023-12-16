@@ -177,35 +177,37 @@ class XLSXWriter
     public function writeToFile($filename)
     {
         foreach ($this->sheets as $sheet_name => $sheet) {
-            self::finalizeSheet($sheet_name); //making sure all footers have been written
+            self::finalizeSheet($sheet_name);
         }
 
         if (file_exists($filename)) {
-            if (is_writable($filename)) {
-                @unlink($filename); //if the zip already exists, remove it
-            } else {
+            if (!is_writable($filename)) {
                 self::log("Error in " . __CLASS__ . "::" . __FUNCTION__ . ", file is not writeable.");
                 return;
             }
+            unlink($filename);
         }
+
         $zip = new ZipArchive();
+
         if (empty($this->sheets)) {
             self::log("Error in " . __CLASS__ . "::" . __FUNCTION__ . ", no worksheets defined.");
             return;
         }
+
         if (!$zip->open($filename, ZipArchive::CREATE)) {
             self::log("Error in " . __CLASS__ . "::" . __FUNCTION__ . ", unable to create zip.");
             return;
         }
 
-        $zip->addEmptyDir("docProps/");
+        $this->addZipDir($zip, "docProps/");
         $zip->addFromString("docProps/app.xml", self::buildAppXML());
         $zip->addFromString("docProps/core.xml", self::buildCoreXML());
 
-        $zip->addEmptyDir("_rels/");
+        $this->addZipDir($zip, "_rels/");
         $zip->addFromString("_rels/.rels", self::buildRelationshipsXML());
 
-        $zip->addEmptyDir("xl/worksheets/");
+        $this->addZipDir($zip, "xl/worksheets/");
         foreach ($this->sheets as $sheet) {
             $zip->addFile($sheet->filename, "xl/worksheets/" . $sheet->xmlname);
         }
@@ -213,9 +215,15 @@ class XLSXWriter
         $zip->addFile($this->writeStylesXML(), "xl/styles.xml");
         $zip->addFromString("[Content_Types].xml", self::buildContentTypesXML());
 
-        $zip->addEmptyDir("xl/_rels/");
+        $this->addZipDir($zip, "xl/_rels/");
         $zip->addFromString("xl/_rels/workbook.xml.rels", self::buildWorkbookRelsXML());
+
         $zip->close();
+    }
+
+    protected function addZipDir(ZipArchive $zip, $dir)
+    {
+        $zip->addEmptyDir($dir);
     }
 
     protected function initializeSheet($sheet_name, $col_widths = array(), $auto_filter = false, $freeze_rows = false, $freeze_columns = false)
@@ -740,7 +748,6 @@ class XLSXWriter
         $file->write('<xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="44"/>');
         $file->write('<xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="42"/>');
         $file->write('<xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="9"/>');
-        $file->write('</xf>');
         $file->write('</cellStyleXfs>');
 
         $file->write('<cellXfs count="' . (count($style_indexes)) . '">');
@@ -777,30 +784,31 @@ class XLSXWriter
         return $temporary_filename;
     }
 
+
     protected function buildAppXML()
     {
-        $app_xml = "";
-        $app_xml .= '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+        $app_xml = '';
+        $app_xml .= '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . PHP_EOL;
         $app_xml .= '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">';
         $app_xml .= '<TotalTime>0</TotalTime>';
-        $app_xml .= '<Company>' . self::xmlspecialchars($this->company) . '</Company>';
+        $app_xml .= '<Company>' . $this->xmlspecialchars($this->company) . '</Company>';
         $app_xml .= '</Properties>';
         return $app_xml;
     }
 
     protected function buildCoreXML()
     {
-        $core_xml = "";
-        $core_xml .= '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+        $core_xml = '';
+        $core_xml .= '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . PHP_EOL;
         $core_xml .= '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">';
-        $core_xml .= '<dcterms:created xsi:type="dcterms:W3CDTF">' . date("Y-m-d\TH:i:s.00\Z") . '</dcterms:created>'; //$date_time = '2014-10-25T15:54:37.00Z';
-        $core_xml .= '<dc:title>' . self::xmlspecialchars($this->title) . '</dc:title>';
-        $core_xml .= '<dc:subject>' . self::xmlspecialchars($this->subject) . '</dc:subject>';
-        $core_xml .= '<dc:creator>' . self::xmlspecialchars($this->author) . '</dc:creator>';
+        $core_xml .= '<dcterms:created xsi:type="dcterms:W3CDTF">' . date("Y-m-d\TH:i:s.00\Z") . '</dcterms:created>';
+        $core_xml .= '<dc:title>' . $this->xmlspecialchars($this->title) . '</dc:title>';
+        $core_xml .= '<dc:subject>' . $this->xmlspecialchars($this->subject) . '</dc:subject>';
+        $core_xml .= '<dc:creator>' . $this->xmlspecialchars($this->author) . '</dc:creator>';
         if (!empty($this->keywords)) {
-            $core_xml .= '<cp:keywords>' . self::xmlspecialchars(implode(", ", (array)$this->keywords)) . '</cp:keywords>';
+            $core_xml .= '<cp:keywords>' . $this->xmlspecialchars(implode(", ", (array)$this->keywords)) . '</cp:keywords>';
         }
-        $core_xml .= '<dc:description>' . self::xmlspecialchars($this->description) . '</dc:description>';
+        $core_xml .= '<dc:description>' . $this->xmlspecialchars($this->description) . '</dc:description>';
         $core_xml .= '<cp:revision>0</cp:revision>';
         $core_xml .= '</cp:coreProperties>';
         return $core_xml;
@@ -808,13 +816,12 @@ class XLSXWriter
 
     protected function buildRelationshipsXML()
     {
-        $rels_xml = "";
-        $rels_xml .= '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $rels_xml = '';
+        $rels_xml .= '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
         $rels_xml .= '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
         $rels_xml .= '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>';
         $rels_xml .= '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>';
         $rels_xml .= '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>';
-        $rels_xml .= "\n";
         $rels_xml .= '</Relationships>';
         return $rels_xml;
     }
@@ -822,23 +829,23 @@ class XLSXWriter
     protected function buildWorkbookXML()
     {
         $i = 0;
-        $workbook_xml = "";
-        $workbook_xml .= '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+        $workbook_xml = '';
+        $workbook_xml .= '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . PHP_EOL;
         $workbook_xml .= '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
         $workbook_xml .= '<fileVersion appName="Calc"/><workbookPr backupFile="false" showObjects="all" date1904="false"/><workbookProtection/>';
         $workbook_xml .= '<bookViews><workbookView activeTab="0" firstSheet="0" showHorizontalScroll="true" showSheetTabs="true" showVerticalScroll="true" tabRatio="212" windowHeight="8192" windowWidth="16384" xWindow="0" yWindow="0"/></bookViews>';
         $workbook_xml .= '<sheets>';
         foreach ($this->sheets as $sheet_name => $sheet) {
-            $sheetname = self::sanitize_sheetname($sheet->sheetname);
-            $workbook_xml .= '<sheet name="' . self::xmlspecialchars($sheetname) . '" sheetId="' . ($i + 1) . '" state="visible" r:id="rId' . ($i + 2) . '"/>';
+            $sheetname = $this->sanitize_sheetname($sheet->sheetname);
+            $workbook_xml .= '<sheet name="' . $this->xmlspecialchars($sheetname) . '" sheetId="' . ($i + 1) . '" state="visible" r:id="rId' . ($i + 2) . '"/>';
             $i++;
         }
         $workbook_xml .= '</sheets>';
         $workbook_xml .= '<definedNames>';
         foreach ($this->sheets as $sheet_name => $sheet) {
             if ($sheet->auto_filter) {
-                $sheetname = self::sanitize_sheetname($sheet->sheetname);
-                $workbook_xml .= '<definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">\'' . self::xmlspecialchars($sheetname) . '\'!$A$1:' . self::xlsCell($sheet->row_count - 1, count($sheet->columns) - 1, true) . '</definedName>';
+                $sheetname = $this->sanitize_sheetname($sheet->sheetname);
+                $workbook_xml .= '<definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">\'' . $this->xmlspecialchars($sheetname) . '\'!$A$1:' . $this->xlsCell($sheet->row_count - 1, count($sheet->columns) - 1, true) . '</definedName>';
                 $i++;
             }
         }
@@ -850,34 +857,32 @@ class XLSXWriter
     protected function buildWorkbookRelsXML()
     {
         $i = 0;
-        $wkbkrels_xml = "";
-        $wkbkrels_xml .= '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $wkbkrels_xml = '';
+        $wkbkrels_xml .= '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
         $wkbkrels_xml .= '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
         $wkbkrels_xml .= '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>';
         foreach ($this->sheets as $sheet_name => $sheet) {
-            $wkbkrels_xml .= '<Relationship Id="rId' . ($i + 2) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/' . ($sheet->xmlname) . '"/>';
+            $wkbkrels_xml .= '<Relationship Id="rId' . ($i + 2) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/' . $sheet->xmlname . '"/>';
             $i++;
         }
-        $wkbkrels_xml .= "\n";
         $wkbkrels_xml .= '</Relationships>';
         return $wkbkrels_xml;
     }
 
     protected function buildContentTypesXML()
     {
-        $content_types_xml = "";
-        $content_types_xml .= '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $content_types_xml = '';
+        $content_types_xml .= '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
         $content_types_xml .= '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">';
         $content_types_xml .= '<Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>';
         $content_types_xml .= '<Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>';
         foreach ($this->sheets as $sheet_name => $sheet) {
-            $content_types_xml .= '<Override PartName="/xl/worksheets/' . ($sheet->xmlname) . '" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+            $content_types_xml .= '<Override PartName="/xl/worksheets/' . $sheet->xmlname . '" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
         }
         $content_types_xml .= '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>';
         $content_types_xml .= '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';
         $content_types_xml .= '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>';
         $content_types_xml .= '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>';
-        $content_types_xml .= "\n";
         $content_types_xml .= '</Types>';
         return $content_types_xml;
     }
@@ -891,170 +896,204 @@ class XLSXWriter
 	 * */
     public static function xlsCell($row_number, $column_number, $absolute = false)
     {
-        $n = $column_number;
-        for ($r = ""; $n >= 0; $n = intval($n / 26) - 1) {
-            $r = chr($n % 26 + 0x41) . $r;
+        $columnLabel = '';
+        for ($n = $column_number; $n >= 0; $n = intval($n / 26) - 1) {
+            $columnLabel = chr($n % 26 + 0x41) . $columnLabel;
         }
-        if ($absolute) {
-            return '$' . $r . '$' . ($row_number + 1);
-        }
-        return $r . ($row_number + 1);
+        return ($absolute ? '$' : '') . $columnLabel . ($absolute ? '$' : '') . ($row_number + 1);
     }
     //------------------------------------------------------------------
-    public static function log($string)
+    public static function log($message)
     {
-        //file_put_contents("php://stderr", date("Y-m-d H:i:s:").rtrim(is_array($string) ? json_encode($string) : $string)."\n");
-        error_log(date("Y-m-d H:i:s:") . rtrim(is_array($string) ? json_encode($string) : $string) . "\n");
+        error_log(date("Y-m-d H:i:s:") . rtrim(is_array($message) ? json_encode($message) : $message) . "\n");
     }
     //------------------------------------------------------------------
     public static function sanitize_filename($filename) //http://msdn.microsoft.com/en-us/library/aa365247%28VS.85%29.aspx
     {
-        $nonprinting = array_map('chr', range(0, 31));
-        $invalid_chars = array('<', '>', '?', '"', ':', '|', '\\', '/', '*', '&');
-        $all_invalids = array_merge($nonprinting, $invalid_chars);
-        return str_replace($all_invalids, "", $filename);
+        $nonPrinting = array_map('chr', range(0, 31));
+        $invalidChars = array('<', '>', '?', '"', ':', '|', '\\', '/', '*', '&');
+        $allInvalids = array_merge($nonPrinting, $invalidChars);
+        return str_replace($allInvalids, "", $filename);
     }
     //------------------------------------------------------------------
     public static function sanitize_sheetname($sheetname)
     {
-        static $badchars  = '\\/?*:[]';
+        static $badchars = '\\/?*:[]';
         static $goodchars = '        ';
         $sheetname = strtr($sheetname, $badchars, $goodchars);
         $sheetname = function_exists('mb_substr') ? mb_substr($sheetname, 0, 31) : substr($sheetname, 0, 31);
-        $sheetname = trim(trim(trim($sheetname), "'")); //trim before and after trimming single quotes
+        $sheetname = trim(trim(trim($sheetname), "'"));
         return !empty($sheetname) ? $sheetname : 'Sheet' . ((rand() % 900) + 100);
     }
     //------------------------------------------------------------------
-    public static function xmlspecialchars($val)
+    public static function xmlspecialchars($value)
     {
-        //note, badchars does not include \t\n\r (\x09\x0a\x0d)
+        // Note: Badchars does not include \t\n\r (\x09\x0a\x0d)
         static $badchars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x7f";
         static $goodchars = "                              ";
-        return strtr(htmlspecialchars($val, ENT_QUOTES | ENT_XML1), $badchars, $goodchars); //strtr appears to be faster than str_replace
+        return strtr(htmlspecialchars($value, ENT_QUOTES | ENT_XML1), $badchars, $goodchars);
     }
     //------------------------------------------------------------------
-    public static function array_first_key(array $arr)
+    public static function array_first_key(array $array)
     {
-        reset($arr);
-        $first_key = key($arr);
-        return $first_key;
+        reset($array);
+        return key($array);
     }
     //------------------------------------------------------------------
     private static function determineNumberFormatType($num_format)
     {
-        $num_format = preg_replace("/\[(Black|Blue|Cyan|Green|Magenta|Red|White|Yellow)\]/i", "", $num_format);
-        if ($num_format == 'GENERAL') return 'n_auto';
-        if ($num_format == '@') return 'n_string';
-        if ($num_format == '0') return 'n_numeric';
-        if (preg_match('/[H]{1,2}:[M]{1,2}(?![^"]*+")/i', $num_format)) return 'n_datetime';
-        if (preg_match('/[M]{1,2}:[S]{1,2}(?![^"]*+")/i', $num_format)) return 'n_datetime';
-        if (preg_match('/[Y]{2,4}(?![^"]*+")/i', $num_format)) return 'n_date';
-        if (preg_match('/[D]{1,2}(?![^"]*+")/i', $num_format)) return 'n_date';
-        if (preg_match('/[M]{1,2}(?![^"]*+")/i', $num_format)) return 'n_date';
-        if (preg_match('/$(?![^"]*+")/', $num_format)) return 'n_numeric';
-        if (preg_match('/%(?![^"]*+")/', $num_format)) return 'n_numeric';
-        if (preg_match('/0(?![^"]*+")/', $num_format)) return 'n_numeric';
+        $numFormat = preg_replace("/\[(Black|Blue|Cyan|Green|Magenta|Red|White|Yellow)\]/i", "", $num_format);
+
+        switch ($numFormat) {
+            case 'GENERAL':
+                return 'n_auto';
+            case '@':
+                return 'n_string';
+            case '0':
+                return 'n_numeric';
+        }
+
+        $dateTimePatterns = [
+            '/[H]{1,2}:[M]{1,2}(?![^"]*+")/i',
+            '/[M]{1,2}:[S]{1,2}(?![^"]*+")/i',
+            '/[Y]{2,4}(?![^"]*+")/i',
+            '/[D]{1,2}(?![^"]*+")/i',
+            '/[M]{1,2}(?![^"]*+")/i',
+        ];
+
+        foreach ($dateTimePatterns as $pattern) {
+            if (preg_match($pattern, $numFormat)) {
+                return 'n_datetime';
+            }
+        }
+
+        $numericPatterns = [
+            '/\$(?![^"]*+")/',
+            '/%(?![^"]*+")/',
+            '/0(?![^"]*+")/',
+        ];
+
+        foreach ($numericPatterns as $pattern) {
+            if (preg_match($pattern, $numFormat)) {
+                return 'n_numeric';
+            }
+        }
+
         return 'n_auto';
     }
     //------------------------------------------------------------------
     private static function numberFormatStandardized($num_format)
     {
-        if ($num_format == 'money') {
-            $num_format = 'dollar';
-        }
-        if ($num_format == 'number') {
-            $num_format = 'integer';
+        switch ($num_format) {
+            case 'money':
+                return 'dollar';
+            case 'number':
+                return 'integer';
+            case 'string':
+                return '@';
+            case 'integer':
+                return '0';
+            case 'date':
+                return 'YYYY-MM-DD';
+            case 'datetime':
+                return 'YYYY-MM-DD HH:MM:SS';
+            case 'time':
+                return 'HH:MM:SS';
+            case 'price':
+                return '#,##0.00';
+            case 'dollar':
+                return '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
+            case 'euro':
+                return '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
         }
 
-        if ($num_format == 'string')   $num_format = '@';
-        else if ($num_format == 'integer')  $num_format = '0';
-        else if ($num_format == 'date')     $num_format = 'YYYY-MM-DD';
-        else if ($num_format == 'datetime') $num_format = 'YYYY-MM-DD HH:MM:SS';
-        else if ($num_format == 'time')     $num_format = 'HH:MM:SS';
-        else if ($num_format == 'price')    $num_format = '#,##0.00';
-        else if ($num_format == 'dollar')   $num_format = '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
-        else if ($num_format == 'euro')     $num_format = '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
-        $ignore_until = '';
+        $ignoreUntil = '';
         $escaped = '';
+
         for ($i = 0, $ix = strlen($num_format); $i < $ix; $i++) {
             $c = $num_format[$i];
-            if ($ignore_until == '' && $c == '[')
-                $ignore_until = ']';
-            else if ($ignore_until == '' && $c == '"')
-                $ignore_until = '"';
-            else if ($ignore_until == $c)
-                $ignore_until = '';
-            if ($ignore_until == '' && ($c == ' ' || $c == '-'  || $c == '('  || $c == ')') && ($i == 0 || $num_format[$i - 1] != '_'))
+
+            if ($ignoreUntil == '' && ($c == '[' || $c == '"')) {
+                $ignoreUntil = $c;
+            } elseif ($ignoreUntil == $c) {
+                $ignoreUntil = '';
+            }
+
+            if ($ignoreUntil == '' && ($c == ' ' || $c == '-' || $c == '(' || $c == ')') && ($i == 0 || $num_format[$i - 1] != '_')) {
                 $escaped .= "\\" . $c;
-            else
+            } else {
                 $escaped .= $c;
+            }
         }
+
         return $escaped;
     }
     //------------------------------------------------------------------
-    public static function add_to_list_get_index(&$haystack, $needle)
+    public static function add_to_list_get_index(array &$haystack, $needle)
     {
-        $existing_idx = array_search($needle, $haystack, $strict = true);
-        if ($existing_idx === false) {
-            $existing_idx = count($haystack);
+        $existingIdx = array_search($needle, $haystack, true);
+
+        if ($existingIdx === false) {
+            $existingIdx = count($haystack);
             $haystack[] = $needle;
         }
-        return $existing_idx;
+
+        return $existingIdx;
     }
     //------------------------------------------------------------------
-    public static function convert_date_time($date_input) //thanks to Excel::Writer::XLSX::Worksheet.pm (perl)
+    public static function convert_date_time($dateTime) //thanks to Excel::Writer::XLSX::Worksheet.pm (perl)
     {
-        $days    = 0;    # Number of days since epoch
-        $seconds = 0;    # Time expressed as fraction of 24h hours in seconds
+        // Inicialización de variables
+        $days = 0;    // Número de días desde la época
+        $seconds = 0; // Tiempo expresado como fracción de 24 horas en segundos
         $year = $month = $day = 0;
-        $hour = $min  = $sec = 0;
+        $hour = $min = $sec = 0;
 
-        $date_time = $date_input;
-        if (preg_match("/(\d{4})\-(\d{2})\-(\d{2})/", $date_time, $matches)) {
+        // Extraer año, mes y día
+        if (preg_match("/(\d{4})\-(\d{2})\-(\d{2})/", $dateTime, $matches)) {
             list($junk, $year, $month, $day) = $matches;
         }
-        if (preg_match("/(\d+):(\d{2}):(\d{2})/", $date_time, $matches)) {
+
+        // Extraer hora, minuto y segundo
+        if (preg_match("/(\d+):(\d{2}):(\d{2})/", $dateTime, $matches)) {
             list($junk, $hour, $min, $sec) = $matches;
             $seconds = ($hour * 60 * 60 + $min * 60 + $sec) / (24 * 60 * 60);
         }
 
-        //using 1900 as epoch, not 1904, ignoring 1904 special case
+        // Usando 1900 como época, no 1904, ignorando el caso especial de 1904
 
-        # Special cases for Excel.
-        if ("$year-$month-$day" == '1899-12-31')  return $seconds;    # Excel 1900 epoch
-        if ("$year-$month-$day" == '1900-01-00')  return $seconds;    # Excel 1900 epoch
-        if ("$year-$month-$day" == '1900-02-29')  return 60 + $seconds;    # Excel false leapday
+        // Casos especiales para Excel.
+        if ("$year-$month-$day" == '1899-12-31') return $seconds;    // Época de Excel 1900
+        if ("$year-$month-$day" == '1900-01-00') return $seconds;    // Época de Excel 1900
+        if ("$year-$month-$day" == '1900-02-29') return 60 + $seconds; // Día ficticio bisiesto de Excel
 
-        # We calculate the date by calculating the number of days since the epoch
-        # and adjust for the number of leap days. We calculate the number of leap
-        # days by normalising the year in relation to the epoch. Thus the year 2000
-        # becomes 100 for 4 and 100 year leapdays and 400 for 400 year leapdays.
-        $epoch  = 1900;
+        // Calcular la fecha contando los días desde la época y ajustando por los años bisiestos.
+        $epoch = 1900;
         $offset = 0;
-        $norm   = 300;
-        $range  = $year - $epoch;
+        $norm = 300;
+        $range = $year - $epoch;
 
-        # Set month days and check for leap year.
+        // Establecer los días de cada mes y comprobar si es un año bisiesto.
         $leap = (($year % 400 == 0) || (($year % 4 == 0) && ($year % 100))) ? 1 : 0;
         $mdays = array(31, ($leap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
 
-        # Some boundary checks
+        // Algunas comprobaciones de límites
         if ($year != 0 || $month != 0 || $day != 0) {
             if ($year < $epoch || $year > 9999) return 0;
-            if ($month < 1     || $month > 12)  return 0;
-            if ($day < 1       || $day > $mdays[$month - 1]) return 0;
+            if ($month < 1 || $month > 12) return 0;
+            if ($day < 1 || $day > $mdays[$month - 1]) return 0;
         }
 
-        # Accumulate the number of days since the epoch.
-        $days = $day;    # Add days for current month
-        $days += array_sum(array_slice($mdays, 0, $month - 1));    # Add days for past months
-        $days += $range * 365;                      # Add days for past years
-        $days += intval(($range) / 4);             # Add leapdays
-        $days -= intval(($range + $offset) / 100); # Subtract 100 year leapdays
-        $days += intval(($range + $offset + $norm) / 400);  # Add 400 year leapdays
-        $days -= $leap;                                      # Already counted above
+        // Acumular el número de días desde la época.
+        $days = $day;    // Añadir días para el mes actual
+        $days += array_sum(array_slice($mdays, 0, $month - 1)); // Añadir días para meses anteriores
+        $days += $range * 365;                      // Añadir días para años anteriores
+        $days += intval(($range) / 4);             // Añadir días bisiestos
+        $days -= intval(($range + $offset) / 100); // Restar días bisiestos de 100 años
+        $days += intval(($range + $offset + $norm) / 400);  // Añadir días bisiestos de 400 años
+        $days -= $leap;                                      // Ya contado anteriormente
 
-        # Adjust for Excel erroneously treating 1900 as a leap year.
+        // Ajustar por el tratamiento erróneo de Excel de 1900 como año bisiesto.
         if ($days > 59) {
             $days++;
         }
