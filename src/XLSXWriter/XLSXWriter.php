@@ -811,7 +811,7 @@ class XLSXWriter
         $fillIdx = isset($styleIndex['fill_idx']) ? intval($styleIndex['fill_idx']) : 0;
         $fontIdx = isset($styleIndex['font_idx']) ? intval($styleIndex['font_idx']) : 0;
 
-        $file->write('<xf applyAlignment="' . $applyAlignment . '" applyBorder="' . $applyBorder . '" applyFont="' . $applyFont . '" applyProtection="false" borderId="' . $borderIdx . '" fillId="' . $fillIdx . '" fontId="' . $fontIdx . '" numFmtId="' . (164 + $styleIndex['numfmtidx']) . '" xfId="0">');
+        $file->write('<xf applyAlignment="' . $applyAlignment . '" applyBorder="' . $applyBorder . '" applyFont="' . $applyFont . '" applyProtection="false" borderId="' . $borderIdx . '" fillId="' . $fillIdx . '" fontId="' . $fontIdx . '" numFmtId="' . (164 + $styleIndex['numFmtIdx']) . '" xfId="0">');
         $file->write('<alignment horizontal="' . $horizAlignment . '" vertical="' . $vertAlignment . '" textRotation="0" wrapText="' . $wrapText . '" indent="0" shrinkToFit="false"/>');
         $file->write('<protection locked="true" hidden="false"/>');
         $file->write('</xf>');
