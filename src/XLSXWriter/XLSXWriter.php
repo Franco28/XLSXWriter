@@ -309,6 +309,7 @@ class XLSXWriter
     {
         $column_types = array();
         foreach ($header_types as $v) {
+            var_dump($v);
             $number_format = self::numberFormatStandardized($v);
             $number_format_type = self::determineNumberFormatType($number_format);
             $cell_style_idx = $this->addCellStyle($number_format, $style_string = null);
