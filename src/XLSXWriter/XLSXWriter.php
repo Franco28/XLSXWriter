@@ -951,7 +951,9 @@ class XLSXWriter
     //------------------------------------------------------------------
     private static function determineNumberFormatType($num_format)
     {
-        $numFormat = preg_replace("/\[(Black|Blue|Cyan|Green|Magenta|Red|White|Yellow)\]/i", "", $num_format);
+        $numFormat = is_array($num_format) ? implode('', $num_format) : $num_format;
+
+        $numFormat = preg_replace("/\[(Black|Blue|Cyan|Green|Magenta|Red|White|Yellow)\]/i", "", $numFormat);
 
         switch ($numFormat) {
             case 'GENERAL':
