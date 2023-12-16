@@ -4,34 +4,58 @@
 
 `XLSXWriter` is a PHP/Laravel library that allows you to easily convert data to an Excel file. It provides a simple and convenient way to generate Excel files with customizable features such as borders, font styles, and column widths.
 
-## How it Works
+## Installation
 
-To generate an Excel file, follow these steps:
+To use `XLSXWriter`, you can install it via Composer:
 
-1. **Start Buffer**: Begin output buffering using `ob_start()`.
+```bash
+    composer require franco28dev/xlsxwriter
+```
 
-2. **Prepare Data**: Organize your data in a multi-dimensional array. The first array is used to scope everything, the second array serves as the header, and the third array contains the values for each row.
+## Usage
 
-3. **Initialize XLSXWriter**: Create an instance of the `XLSXWriter` class.
+#### Setting Excel File Properties
 
-4. **Set Author and Title**: Use `setAuthor` to set the author description and `writeSheet` to define the title tab.
+```php
+    $writer->setTitle($title);
+    $writer->setSubject($subject);
+    $writer->setAuthor($author);
+    $writer->setCompany($company);
+    $writer->setKeywords($keywords);
+    $writer->setDescription($description);
+    $writer->setTempDir($tempdir);
+    $writer->setRightToLeft($isRightToLeft);
+```
 
-5. **Customize Appearance**:
+#### Writing to File
 
-   - **Enable Borders**: Utilize `setEnableBorders(true)` to enable borders for cells.
-   - **Set Font Style**: Specify the font style using `setFont(['name' => 'Arial', 'size' => 12])`.
+```php
+    $writer->writeToFile($filename);
+```
 
-6. **Set Column Widths**: Adjust the column widths with `setColumnWidths([15, 20])`.
+#### Writing Sheet Header
 
-7. **Define Filename**: Provide a filename for the Excel file, such as `'july_sales.xlsx'`.
+```php
+    $writer->writeSheetHeader($sheetName, $headerTypes, $columnOptions);
+```
 
-8. **Write to File**: Save the Excel file using `writeToFile($filename)`.
+#### Writing Sheet Row
 
-9. **Clean Buffer**: Clear the output buffer with `ob_get_clean()`.
+```php
+    $writer->writeSheetRow($sheetName, $row, $rowOptions);
+```
 
-10. **Download Excel File**: Check if the file was created, generate download headers, and delete the file after download.
+#### Marking Merged Cell
 
-11. **Return Code or View**: Return the desired code or view.
+```php
+    $writer->markMergedCell($sheet_name, $start_cell_row, $start_cell_column, $end_cell_row, $end_cell_column);
+```
+
+#### Writing Entire Sheet
+
+```php
+    $writer->writeSheet($data, $sheet_name, $header_types);
+```
 
 ## Example
 
@@ -58,17 +82,6 @@ public function GenerateDataToExcel()
 
     // Set the title tab
     $writer->writeSheet("July sales");
-
-    // Enable borders for cells
-    $writer->setEnableBorders(true);
-
-    // Set font style
-    $font = ['name' => 'Arial', 'size' => 12];
-    $writer->setFont($font);
-
-    // Set column widths
-    $columnWidths = [15, 20]; // Sample widths for the two columns
-    $writer->setColumnWidths($columnWidths);
 
     // The filename
     $filename = 'july_sales.xlsx';
