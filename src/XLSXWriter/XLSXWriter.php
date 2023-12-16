@@ -32,6 +32,116 @@ class XLSXWriter
     protected $font = [];
     protected $enableBorders = false;
 
+    /**
+     * Set the title of the Excel file.
+     *
+     * @param string $title The title to set.
+     */
+    public function setTitle($title = '')
+    {
+        $this->title = $title;
+    }
+
+    /**
+     * Set the subject of the Excel file.
+     *
+     * @param string $subject The subject to set.
+     */
+    public function setSubject($subject = '')
+    {
+        $this->subject = $subject;
+    }
+
+    /**
+     * Set the author of the Excel file.
+     *
+     * @param string $author The author to set.
+     */
+    public function setAuthor($author = '')
+    {
+        $this->author = $author;
+    }
+
+    /**
+     * Set the company associated with the Excel file.
+     *
+     * @param string $company The company to set.
+     */
+    public function setCompany($company = '')
+    {
+        $this->company = $company;
+    }
+
+    /**
+     * Set keywords for the Excel file.
+     *
+     * @param string $keywords Keywords to set.
+     */
+    public function setKeywords($keywords = '')
+    {
+        $this->keywords = $keywords;
+    }
+
+    /**
+     * Set the description of the Excel file.
+     *
+     * @param string $description The description to set.
+     */
+    public function setDescription($description = '')
+    {
+        $this->description = $description;
+    }
+
+    /**
+     * Set the temporary directory for Excel file creation.
+     *
+     * @param string $tempdir The temporary directory path.
+     */
+    public function setTempDir($tempdir = '')
+    {
+        $this->tempdir = $tempdir;
+    }
+
+    /**
+     * Set column widths for the Excel file.
+     *
+     * @param array $widths An associative array of column widths (e.g., ['A' => 50]).
+     */
+    public function setColumnWidths($widths = ['A' => 50])
+    {
+        $this->columnWidths = $widths;
+    }
+
+    /**
+     * Set the font style for the Excel file.
+     *
+     * @param array $font An associative array specifying the font (e.g., ['name' => 'Arial', 'size' => 12]).
+     */
+    public function setFont($font = ['name' => 'Arial', 'size' => 12])
+    {
+        $this->font = $font;
+    }
+
+    /**
+     * Set the right-to-left text direction for the Excel file.
+     *
+     * @param bool $isRightToLeft Whether to set right-to-left text direction.
+     */
+    public function setRightToLeft($isRightToLeft = false)
+    {
+        $this->isRightToLeft = $isRightToLeft;
+    }
+
+    /**
+     * Enable or disable cell borders in the Excel file.
+     *
+     * @param bool $enableBorders Whether to enable or disable cell borders.
+     */
+    public function setEnableBorders($enableBorders)
+    {
+        $this->enableBorders = $enableBorders;
+    }
+
     public function __construct()
     {
         defined('ENT_XML1') or define('ENT_XML1', 16); //for php 5.3, avoid fatal error
@@ -39,61 +149,6 @@ class XLSXWriter
         is_writeable($this->tempFilename()) or self::log("Warning: tempdir " . sys_get_temp_dir() . " not writeable, use ->setTempDir()");
         class_exists('ZipArchive') or self::log("Error: ZipArchive class does not exist");
         $this->addCellStyle($number_format = 'GENERAL', $style_string = null);
-    }
-
-    public function setTitle($title = '')
-    {
-        $this->title = $title;
-    }
-
-    public function setSubject($subject = '')
-    {
-        $this->subject = $subject;
-    }
-
-    public function setAuthor($author = '')
-    {
-        $this->author = $author;
-    }
-
-    public function setCompany($company = '')
-    {
-        $this->company = $company;
-    }
-
-    public function setKeywords($keywords = '')
-    {
-        $this->keywords = $keywords;
-    }
-
-    public function setDescription($description = '')
-    {
-        $this->description = $description;
-    }
-
-    public function setTempDir($tempdir = '')
-    {
-        $this->tempdir = $tempdir;
-    }
-
-    public function setColumnWidths($widths = ['A' => 50])
-    {
-        $this->columnWidths = $widths;
-    }
-
-    public function setFont($font = ['name' => 'Arial', 'size' => 12])
-    {
-        $this->font = $font;
-    }
-
-    public function setRightToLeft($isRightToLeft = false)
-    {
-        $this->isRightToLeft = $isRightToLeft;
-    }
-
-    public function setEnableBorders($enableBorders)
-    {
-        $this->enableBorders = $enableBorders;
     }
 
     public function __destruct()
