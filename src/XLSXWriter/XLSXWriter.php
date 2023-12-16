@@ -994,23 +994,30 @@ class XLSXWriter
     private static function numberFormatStandardized($num_format)
     {
         if ($num_format == 'money') {
-            $num_format = 'dollar';
-        }
-        
-        if ($num_format == 'number') {
-            $num_format = 'integer';
+            return 'dollar';
+        } elseif ($num_format == 'number') {
+            return 'integer';
+        } elseif ($num_format == 'string') {
+            return '@';
+        } elseif ($num_format == 'integer') {
+            return '0';
+        } elseif ($num_format == 'date') {
+            return 'YYYY-MM-DD';
+        } elseif ($num_format == 'datetime') {
+            return 'YYYY-MM-DD HH:MM:SS';
+        } elseif ($num_format == 'time') {
+            return 'HH:MM:SS';
+        } elseif ($num_format == 'price') {
+            return '#,##0.00';
+        } elseif ($num_format == 'dollar') {
+            return '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
+        } elseif ($num_format == 'euro') {
+            return '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
         }
 
-        if ($num_format == 'string')   $num_format = '@';
-        else if ($num_format == 'integer')  $num_format = '0';
-        else if ($num_format == 'date')     $num_format = 'YYYY-MM-DD';
-        else if ($num_format == 'datetime') $num_format = 'YYYY-MM-DD HH:MM:SS';
-        else if ($num_format == 'time')     $num_format = 'HH:MM:SS';
-        else if ($num_format == 'price')    $num_format = '#,##0.00';
-        else if ($num_format == 'dollar')   $num_format = '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
-        else if ($num_format == 'euro')     $num_format = '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
         $ignore_until = '';
         $escaped = '';
+
         for ($i = 0, $ix = strlen($num_format); $i < $ix; $i++) {
             $c = $num_format[$i];
             if ($ignore_until == '' && $c == '[')
