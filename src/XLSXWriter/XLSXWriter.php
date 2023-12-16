@@ -103,26 +103,6 @@ class XLSXWriter
     }
 
     /**
-     * Set column widths for the Excel file.
-     *
-     * @param array $widths An associative array of column widths (e.g., ['A' => 50]).
-     */
-    public function setColumnWidths($widths = ['A' => 50])
-    {
-        $this->columnWidths = $widths;
-    }
-
-    /**
-     * Set the font style for the Excel file.
-     *
-     * @param array $font An associative array specifying the font (e.g., ['name' => 'Arial', 'size' => 12]).
-     */
-    public function setFont($font = ['name' => 'Arial', 'size' => 12])
-    {
-        $this->font = $font;
-    }
-
-    /**
      * Set the right-to-left text direction for the Excel file.
      *
      * @param bool $isRightToLeft Whether to set right-to-left text direction.
@@ -140,6 +120,26 @@ class XLSXWriter
     public function setEnableBorders($enableBorders)
     {
         $this->enableBorders = $enableBorders;
+    }
+
+    /**
+     * Set column widths for the Excel file.
+     *
+     * @param array $widths An associative array of column widths (e.g., ['A' => 50]).
+     */
+    public function setColumnWidths($widths = ['A' => 50])
+    {
+        $this->columnWidths = $widths;
+    }
+
+    /**
+     * Set the font style for the Excel file.
+     *
+     * @param array $font An associative array specifying the font (e.g., ['name' => 'Arial', 'size' => 12]).
+     */
+    public function setFont($font = ['name' => 'Arial', 'size' => 12])
+    {
+        $this->font = $font;
     }
 
     /**
@@ -237,8 +237,8 @@ class XLSXWriter
             $zip->addFile($sheet->filename, "xl/worksheets/" . $sheet->xmlname);
         }
         $zip->addFromString("xl/workbook.xml", self::buildWorkbookXML());
-        //$zip->addFile($this->writeStylesXML(), "xl/styles.xml");
-        $zip->addFromString("xl/styles.xml", self::buildStylesXML());
+        $zip->addFile($this->writeStylesXML(), "xl/styles.xml");
+        //$zip->addFromString("xl/styles.xml", self::buildStylesXML());
         $zip->addFromString("[Content_Types].xml", self::buildContentTypesXML());
 
         $zip->addEmptyDir("xl/_rels/");
@@ -601,28 +601,28 @@ class XLSXWriter
         $borders = $r['borders'];
         $style_indexes = $r['styles'];
 
+        // Apply custom styles set through methods
+        $font = $this->font;
+        $enableBorders = $this->enableBorders;
+        $columnWidths = $this->columnWidths;
+
         $temporary_filename = $this->tempFilename();
         $file = new XLSXWriter_BuffererWriter($temporary_filename);
         $file->write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n");
         $file->write('<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">');
+
+        // Add custom number formats
         $file->write('<numFmts count="' . count($this->number_formats) . '">');
         foreach ($this->number_formats as $i => $v) {
             $file->write('<numFmt numFmtId="' . (164 + $i) . '" formatCode="' . self::xmlspecialchars($v) . '" />');
         }
-        //$file->write(		'<numFmt formatCode="GENERAL" numFmtId="164"/>');
-        //$file->write(		'<numFmt formatCode="[$$-1009]#,##0.00;[RED]\-[$$-1009]#,##0.00" numFmtId="165"/>');
-        //$file->write(		'<numFmt formatCode="YYYY-MM-DD\ HH:MM:SS" numFmtId="166"/>');
-        //$file->write(		'<numFmt formatCode="YYYY-MM-DD" numFmtId="167"/>');
         $file->write('</numFmts>');
 
-        $file->write('<fonts count="' . (count($fonts)) . '">');
-        $file->write('<font><name val="Arial"/><charset val="1"/><family val="2"/><sz val="10"/></font>');
-        $file->write('<font><name val="Arial"/><family val="0"/><sz val="10"/></font>');
-        $file->write('<font><name val="Arial"/><family val="0"/><sz val="10"/></font>');
-        $file->write('<font><name val="Arial"/><family val="0"/><sz val="10"/></font>');
-
+        // Add custom fonts
+        $file->write('<fonts count="' . (count($fonts) + 1) . '">');
+        $file->write('<font><name val="' . htmlspecialchars($font['name']) . '"/><charset val="1"/><family val="2"/><sz val="' . intval($font['size']) . '"/></font>');
         foreach ($fonts as $font) {
-            if (!empty($font)) { //fonts have 4 empty placeholders in array to offset the 4 static xml entries above
+            if (!empty($font)) {
                 $f = json_decode($font, true);
                 $file->write('<font>');
                 $file->write('<name val="' . htmlspecialchars($f['name']) . '"/><charset val="1"/><family val="' . intval($f['family']) . '"/>');
@@ -647,33 +647,40 @@ class XLSXWriter
         }
         $file->write('</fonts>');
 
+        // Add custom fills
         $file->write('<fills count="' . (count($fills)) . '">');
         $file->write('<fill><patternFill patternType="none"/></fill>');
         $file->write('<fill><patternFill patternType="gray125"/></fill>');
         foreach ($fills as $fill) {
-            if (!empty($fill)) { //fills have 2 empty placeholders in array to offset the 2 static xml entries above
+            if (!empty($fill)) {
                 $file->write('<fill><patternFill patternType="solid"><fgColor rgb="' . strval($fill) . '"/><bgColor indexed="64"/></patternFill></fill>');
             }
         }
         $file->write('</fills>');
 
-        $file->write('<borders count="' . (count($borders)) . '">');
-        $file->write('<border diagonalDown="false" diagonalUp="false"><left/><right/><top/><bottom/><diagonal/></border>');
-        foreach ($borders as $border) {
-            if (!empty($border)) { //fonts have an empty placeholder in the array to offset the static xml entry above
-                $pieces = json_decode($border, true);
-                $border_style = !empty($pieces['style']) ? $pieces['style'] : 'hair';
-                $border_color = !empty($pieces['color']) ? '<color rgb="' . strval($pieces['color']) . '"/>' : '';
-                $file->write('<border diagonalDown="false" diagonalUp="false">');
-                foreach (array('left', 'right', 'top', 'bottom') as $side) {
-                    $show_side = in_array($side, $pieces['side']) ? true : false;
-                    $file->write($show_side ? "<$side style=\"$border_style\">$border_color</$side>" : "<$side/>");
+        // Enable or disable borders based on the setting
+        if ($enableBorders) {
+            // Add custom borders
+            foreach ($borders as $border) {
+                if (!empty($border)) {
+                    $pieces = json_decode($border, true);
+                    $border_style = !empty($pieces['style']) ? $pieces['style'] : 'hair';
+                    $border_color = !empty($pieces['color']) ? '<color rgb="' . strval($pieces['color']) . '"/>' : '';
+                    $file->write('<border diagonalDown="false" diagonalUp="false">');
+                    foreach (array('left', 'right', 'top', 'bottom') as $side) {
+                        $show_side = in_array($side, $pieces['side']) ? true : false;
+                        $file->write($show_side ? "<$side style=\"$border_style\">$border_color</$side>" : "<$side/>");
+                    }
+                    $file->write('<diagonal/>');
+                    $file->write('</border>');
                 }
-                $file->write('<diagonal/>');
-                $file->write('</border>');
             }
         }
-        $file->write('</borders>');
+
+        // Set custom column widths
+        foreach ($columnWidths as $col => $width) {
+            $file->write('<col min="' . $this->columnIndexFromString($col) . '" max="' . $this->columnIndexFromString($col) . '" width="' . $width . '" customWidth="1"/>');
+        }
 
         $file->write('<cellStyleXfs count="20">');
         $file->write('<xf applyAlignment="true" applyBorder="true" applyFont="true" applyProtection="true" borderId="0" fillId="0" fontId="0" numFmtId="164">');
@@ -731,9 +738,22 @@ class XLSXWriter
         $file->write('<cellStyle builtinId="7" customBuiltin="false" name="Currency [0]" xfId="18"/>');
         $file->write('<cellStyle builtinId="5" customBuiltin="false" name="Percent" xfId="19"/>');
         $file->write('</cellStyles>');
+
         $file->write('</styleSheet>');
         $file->close();
         return $temporary_filename;
+    }
+
+    protected function columnIndexFromString($column)
+    {
+        $columnIndex = 0;
+        $column = strtoupper($column);
+
+        for ($i = 0; $i < strlen($column); $i++) {
+            $columnIndex = $columnIndex * 26 + ord($column[$i]) - ord('A') + 1;
+        }
+
+        return $columnIndex;
     }
 
     protected function buildAppXML()
@@ -776,39 +796,6 @@ class XLSXWriter
         $rels_xml .= "\n";
         $rels_xml .= '</Relationships>';
         return $rels_xml;
-    }
-
-    protected function buildStylesXML()
-    {
-        $styles_xml = "";
-        $styles_xml .= '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
-        $styles_xml .= '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
-        $styles_xml .= '<fonts count="1">';
-        $styles_xml .= '<font>';
-        $styles_xml .= '<name val="' . $this->font['name'] . '"/>';
-        $styles_xml .= '<sz val="' . $this->font['size'] . '"/>';
-        $styles_xml .= '</font>';
-        $styles_xml .= '</fonts>';
-
-        if ($this->enableBorders) {
-            $styles_xml .= '<borders count="1">';
-            $styles_xml .= '<border>';
-            $styles_xml .= '<left/>';
-            $styles_xml .= '<right/>';
-            $styles_xml .= '<top/>';
-            $styles_xml .= '<bottom/>';
-            $styles_xml .= '</border>';
-            $styles_xml .= '</borders>';
-        }
-
-        $styles_xml .= '<fills><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>';
-        $styles_xml .= '<borders><border diagonalDown="false" diagonalUp="false"><left/><right/><top/><bottom/><diagonal/></border></borders>';
-        $styles_xml .= '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="true"><alignment horizontal="general" vertical="bottom"/></xf></cellStyleXfs>';
-        $styles_xml .= '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>';
-        $styles_xml .= '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>';
-        $styles_xml .= '</styleSheet>';
-
-        return $styles_xml;
     }
 
     protected function buildWorkbookXML()
