@@ -337,7 +337,7 @@ class XLSXWriter
      * Example Usage:
      *   $writer->writeSheetHeader("Sheet1", ["Name" => "string", "Age" => "n_numeric"], ['widths' => [20, 10], 'auto_filter' => 1]);
      */
-    public function writeSheetHeader($sheet_name, array $header_types, $col_options = null)
+    public function writeSheetHeader(string $sheet_name, array $header_types, array $col_options = null)
     {
         if (empty($sheet_name) || empty($header_types) || !empty($this->sheets[$sheet_name]))
             return;
@@ -367,6 +367,7 @@ class XLSXWriter
             $sheet->file_writer->write('</row>');
             $sheet->row_count++;
         }
+
         $this->current_sheet = $sheet_name;
     }
 
@@ -385,10 +386,11 @@ class XLSXWriter
      * Example Usage:
      *   $writer->writeSheetRow("Sheet1", ["John Doe", 25, "Male"], ['height' => 15, 'hidden' => false, 'collapsed' => true]);
      */
-    public function writeSheetRow($sheet_name, array $row, $row_options = null)
+    public function writeSheetRow(string $sheet_name, array $row, array $row_options = null)
     {
-        if (empty($sheet_name))
+        if (empty($sheet_name)) {
             return;
+        }
 
         $this->initializeSheet($sheet_name);
         $sheet = &$this->sheets[$sheet_name];
@@ -416,8 +418,10 @@ class XLSXWriter
             $this->writeCell($sheet->file_writer, $sheet->row_count, $c, $v, $number_format_type, $cell_style_idx);
             $c++;
         }
+
         $sheet->file_writer->write('</row>');
         $sheet->row_count++;
+
         $this->current_sheet = $sheet_name;
     }
 
@@ -429,8 +433,9 @@ class XLSXWriter
 
     protected function finalizeSheet($sheet_name)
     {
-        if (empty($sheet_name) || $this->sheets[$sheet_name]->finalized)
+        if (empty($sheet_name) || $this->sheets[$sheet_name]->finalized) {
             return;
+        }
 
         $sheet = &$this->sheets[$sheet_name];
 
@@ -467,7 +472,6 @@ class XLSXWriter
         $sheet->finalized = true;
     }
 
-
     /**
      * Marks a merged cell range in the specified worksheet.
      *
@@ -483,8 +487,9 @@ class XLSXWriter
      */
     public function markMergedCell($sheet_name, $start_cell_row, $start_cell_column, $end_cell_row, $end_cell_column)
     {
-        if (empty($sheet_name) || $this->sheets[$sheet_name]->finalized)
+        if (empty($sheet_name) || $this->sheets[$sheet_name]->finalized) {
             return;
+        }
 
         self::initializeSheet($sheet_name);
         $sheet = &$this->sheets[$sheet_name];
@@ -511,16 +516,19 @@ class XLSXWriter
      *   $headerTypes = ['Name' => 'string', 'Age' => 'numeric', 'City' => 'string'];
      *   $writer->writeSheet($data, 'MySheet', $headerTypes);
      */
-    public function writeSheet(array $data, $sheet_name = '', array $header_types = array())
+    public function writeSheet(array $data, string $sheet_name = '', array $header_types = array())
     {
         $sheet_name = empty($sheet_name) ? 'Sheet1' : $sheet_name;
         $data = empty($data) ? array(array('')) : $data;
+
         if (!empty($header_types)) {
             $this->writeSheetHeader($sheet_name, $header_types);
         }
+
         foreach ($data as $i => $row) {
             $this->writeSheetRow($sheet_name, $row);
         }
+
         $this->finalizeSheet($sheet_name);
     }
 
@@ -560,6 +568,7 @@ class XLSXWriter
         $fonts = array('', '', '', ''); //4 placeholders for static xml later
         $borders = array(''); //1 placeholder for static xml later
         $style_indexes = array();
+
         foreach ($this->cell_styles as $i => $cell_style_string) {
             $semi_colon_pos = strpos($cell_style_string, ";");
             $number_format_idx = substr($cell_style_string, 0, $semi_colon_pos);
@@ -791,6 +800,7 @@ class XLSXWriter
         $file->write('</styleSheet>');
 
         $file->close();
+
         return $temporary_filename;
     }
 
@@ -802,6 +812,7 @@ class XLSXWriter
         $app_xml .= '<TotalTime>0</TotalTime>';
         $app_xml .= '<Company>' . $this->xmlspecialchars($this->company) . '</Company>';
         $app_xml .= '</Properties>';
+
         return $app_xml;
     }
 
@@ -814,12 +825,15 @@ class XLSXWriter
         $core_xml .= '<dc:title>' . $this->xmlspecialchars($this->title) . '</dc:title>';
         $core_xml .= '<dc:subject>' . $this->xmlspecialchars($this->subject) . '</dc:subject>';
         $core_xml .= '<dc:creator>' . $this->xmlspecialchars($this->author) . '</dc:creator>';
+
         if (!empty($this->keywords)) {
             $core_xml .= '<cp:keywords>' . $this->xmlspecialchars(implode(", ", (array)$this->keywords)) . '</cp:keywords>';
         }
+
         $core_xml .= '<dc:description>' . $this->xmlspecialchars($this->description) . '</dc:description>';
         $core_xml .= '<cp:revision>0</cp:revision>';
         $core_xml .= '</cp:coreProperties>';
+
         return $core_xml;
     }
 
@@ -832,6 +846,7 @@ class XLSXWriter
         $rels_xml .= '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>';
         $rels_xml .= '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>';
         $rels_xml .= '</Relationships>';
+
         return $rels_xml;
     }
 
@@ -844,11 +859,13 @@ class XLSXWriter
         $workbook_xml .= '<fileVersion appName="Calc"/><workbookPr backupFile="false" showObjects="all" date1904="false"/><workbookProtection/>';
         $workbook_xml .= '<bookViews><workbookView activeTab="0" firstSheet="0" showHorizontalScroll="true" showSheetTabs="true" showVerticalScroll="true" tabRatio="212" windowHeight="8192" windowWidth="16384" xWindow="0" yWindow="0"/></bookViews>';
         $workbook_xml .= '<sheets>';
+
         foreach ($this->sheets as $sheet_name => $sheet) {
             $sheetname = $this->sanitize_sheetname($sheet->sheetname);
             $workbook_xml .= '<sheet name="' . $this->xmlspecialchars($sheetname) . '" sheetId="' . ($i + 1) . '" state="visible" r:id="rId' . ($i + 2) . '"/>';
             $i++;
         }
+
         $workbook_xml .= '</sheets>';
         $workbook_xml .= '<definedNames>';
         foreach ($this->sheets as $sheet_name => $sheet) {
@@ -858,8 +875,10 @@ class XLSXWriter
                 $i++;
             }
         }
+
         $workbook_xml .= '</definedNames>';
         $workbook_xml .= '<calcPr iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/></workbook>';
+
         return $workbook_xml;
     }
 
@@ -870,11 +889,13 @@ class XLSXWriter
         $wkbkrels_xml .= '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
         $wkbkrels_xml .= '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
         $wkbkrels_xml .= '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>';
+
         foreach ($this->sheets as $sheet_name => $sheet) {
             $wkbkrels_xml .= '<Relationship Id="rId' . ($i + 2) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/' . $sheet->xmlname . '"/>';
             $i++;
         }
         $wkbkrels_xml .= '</Relationships>';
+
         return $wkbkrels_xml;
     }
 
@@ -885,14 +906,17 @@ class XLSXWriter
         $content_types_xml .= '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">';
         $content_types_xml .= '<Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>';
         $content_types_xml .= '<Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>';
+
         foreach ($this->sheets as $sheet_name => $sheet) {
             $content_types_xml .= '<Override PartName="/xl/worksheets/' . $sheet->xmlname . '" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
         }
+
         $content_types_xml .= '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>';
         $content_types_xml .= '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';
         $content_types_xml .= '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>';
         $content_types_xml .= '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>';
         $content_types_xml .= '</Types>';
+
         return $content_types_xml;
     }
 
@@ -912,12 +936,12 @@ class XLSXWriter
         if ($absolute) {
             return '$' . $r . '$' . ($row_number + 1);
         }
+
         return $r . ($row_number + 1);
     }
     //------------------------------------------------------------------
     public static function log($string)
     {
-        //file_put_contents("php://stderr", date("Y-m-d H:i:s:").rtrim(is_array($string) ? json_encode($string) : $string)."\n");
         error_log(date("Y-m-d H:i:s:") . rtrim(is_array($string) ? json_encode($string) : $string) . "\n");
     }
     //------------------------------------------------------------------
