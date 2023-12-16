@@ -168,47 +168,68 @@ class XLSXWriter
         return $string;
     }
 
+    /**
+     * Writes the Excel workbook to a file.
+     *
+     * @param string $filename The name of the file to save the workbook as.
+     */
     public function writeToFile($filename)
     {
-        foreach ($this->sheets as $sheet_name => $sheet) {
-            self::finalizeSheet($sheet_name); //making sure all footers have been written
+        foreach ($this->sheets as $sheetName => $sheet) {
+            self::finalizeSheet($sheetName); // Ensure all footers have been written
         }
 
+        // Check if the file exists and is writable
         if (file_exists($filename)) {
             if (is_writable($filename)) {
-                @unlink($filename); //if the zip already exists, remove it
+                // Remove the existing file if it's writable
+                unlink($filename);
             } else {
                 self::log("Error in " . __CLASS__ . "::" . __FUNCTION__ . ", file is not writeable.");
                 return;
             }
         }
+
+        // Create a new ZipArchive
         $zip = new ZipArchive();
+
+        // Check if any worksheets are defined
         if (empty($this->sheets)) {
             self::log("Error in " . __CLASS__ . "::" . __FUNCTION__ . ", no worksheets defined.");
             return;
         }
+
+        // Attempt to open the zip file for writing
         if (!$zip->open($filename, ZipArchive::CREATE)) {
             self::log("Error in " . __CLASS__ . "::" . __FUNCTION__ . ", unable to create zip.");
             return;
         }
 
+        // Add docProps folder and its XML files
         $zip->addEmptyDir("docProps/");
         $zip->addFromString("docProps/app.xml", self::buildAppXML());
         $zip->addFromString("docProps/core.xml", self::buildCoreXML());
 
+        // Add _rels folder and its .rels file
         $zip->addEmptyDir("_rels/");
         $zip->addFromString("_rels/.rels", self::buildRelationshipsXML());
 
+        // Add xl/worksheets folder and individual worksheet files
         $zip->addEmptyDir("xl/worksheets/");
         foreach ($this->sheets as $sheet) {
             $zip->addFile($sheet->filename, "xl/worksheets/" . $sheet->xmlname);
         }
+
+        // Add workbook.xml, styles.xml, and [Content_Types].xml
         $zip->addFromString("xl/workbook.xml", self::buildWorkbookXML());
-        $zip->addFile($this->writeStylesXML(), "xl/styles.xml");  //$zip->addFromString("xl/styles.xml"           , self::buildStylesXML() );
+        $zip->addFile($this->writeStylesXML(), "xl/styles.xml");
         $zip->addFromString("[Content_Types].xml", self::buildContentTypesXML());
 
+        // Add xl/_rels folder and workbook.xml.rels file
         $zip->addEmptyDir("xl/_rels/");
         $zip->addFromString("xl/_rels/workbook.xml.rels", self::buildWorkbookRelsXML());
+
+        // Close the zip file
         $zip->close();
     }
 
