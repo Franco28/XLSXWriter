@@ -1034,7 +1034,7 @@ class XLSXWriter
         $ignore_until = '';
         $escaped = '';
 
-        for ($i = 0, $ix = strlen($num_format); $i < $ix; $i++) {
+        for ($i = 0, $ix = is_array($num_format) ? 0 : strlen($num_format); $i < $ix; $i++) {
             $c = $num_format[$i];
             if ($ignore_until == '' && $c == '[')
                 $ignore_until = ']';
