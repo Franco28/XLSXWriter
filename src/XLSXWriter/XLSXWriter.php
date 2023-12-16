@@ -142,15 +142,26 @@ class XLSXWriter
         $this->enableBorders = $enableBorders;
     }
 
+    /**
+     * XLSXWriter constructor.
+     *
+     * Initializes the XLSXWriter class, sets default configurations, and performs essential checks.
+     */
     public function __construct()
     {
-        defined('ENT_XML1') or define('ENT_XML1', 16); //for php 5.3, avoid fatal error
-        date_default_timezone_get() or date_default_timezone_set('UTC'); //php.ini missing tz, avoid warning
+        defined('ENT_XML1') or define('ENT_XML1', 16);
+        date_default_timezone_get() or date_default_timezone_set('UTC');
         is_writeable($this->tempFilename()) or self::log("Warning: tempdir " . sys_get_temp_dir() . " not writeable, use ->setTempDir()");
         class_exists('ZipArchive') or self::log("Error: ZipArchive class does not exist");
         $this->addCellStyle($number_format = 'GENERAL', $style_string = null);
     }
 
+    /**
+     * XLSXWriter destructor.
+     *
+     * Cleans up temporary files created during the XLSXWriter instance lifecycle.
+     * Deletes any temporary files associated with the instance to free up resources.
+     */
     public function __destruct()
     {
         if (!empty($this->temp_files)) {
