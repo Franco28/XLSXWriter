@@ -905,123 +905,91 @@ class XLSXWriter
 	 * */
     public static function xlsCell($row_number, $column_number, $absolute = false)
     {
-        $columnLabel = '';
-        for ($n = $column_number; $n >= 0; $n = intval($n / 26) - 1) {
-            $columnLabel = chr($n % 26 + 0x41) . $columnLabel;
+        $n = $column_number;
+        for ($r = ""; $n >= 0; $n = intval($n / 26) - 1) {
+            $r = chr($n % 26 + 0x41) . $r;
         }
-        return ($absolute ? '$' : '') . $columnLabel . ($absolute ? '$' : '') . ($row_number + 1);
+        if ($absolute) {
+            return '$' . $r . '$' . ($row_number + 1);
+        }
+        return $r . ($row_number + 1);
     }
     //------------------------------------------------------------------
-    public static function log($message)
+    public static function log($string)
     {
-        error_log(date("Y-m-d H:i:s:") . rtrim(is_array($message) ? json_encode($message) : $message) . "\n");
+        //file_put_contents("php://stderr", date("Y-m-d H:i:s:").rtrim(is_array($string) ? json_encode($string) : $string)."\n");
+        error_log(date("Y-m-d H:i:s:") . rtrim(is_array($string) ? json_encode($string) : $string) . "\n");
     }
     //------------------------------------------------------------------
     public static function sanitize_filename($filename) //http://msdn.microsoft.com/en-us/library/aa365247%28VS.85%29.aspx
     {
-        $nonPrinting = array_map('chr', range(0, 31));
-        $invalidChars = array('<', '>', '?', '"', ':', '|', '\\', '/', '*', '&');
-        $allInvalids = array_merge($nonPrinting, $invalidChars);
-        return str_replace($allInvalids, "", $filename);
+        $nonprinting = array_map('chr', range(0, 31));
+        $invalid_chars = array('<', '>', '?', '"', ':', '|', '\\', '/', '*', '&');
+        $all_invalids = array_merge($nonprinting, $invalid_chars);
+        return str_replace($all_invalids, "", $filename);
     }
     //------------------------------------------------------------------
     public static function sanitize_sheetname($sheetname)
     {
-        static $badchars = '\\/?*:[]';
+        static $badchars  = '\\/?*:[]';
         static $goodchars = '        ';
         $sheetname = strtr($sheetname, $badchars, $goodchars);
         $sheetname = function_exists('mb_substr') ? mb_substr($sheetname, 0, 31) : substr($sheetname, 0, 31);
-        $sheetname = trim(trim(trim($sheetname), "'"));
+        $sheetname = trim(trim(trim($sheetname), "'")); //trim before and after trimming single quotes
         return !empty($sheetname) ? $sheetname : 'Sheet' . ((rand() % 900) + 100);
     }
     //------------------------------------------------------------------
-    public static function xmlspecialchars($value)
+    public static function xmlspecialchars($val)
     {
-        // Note: Badchars does not include \t\n\r (\x09\x0a\x0d)
+        //note, badchars does not include \t\n\r (\x09\x0a\x0d)
         static $badchars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x7f";
         static $goodchars = "                              ";
-        return strtr(htmlspecialchars($value, ENT_QUOTES | ENT_XML1), $badchars, $goodchars);
+        return strtr(htmlspecialchars($val, ENT_QUOTES | ENT_XML1), $badchars, $goodchars); //strtr appears to be faster than str_replace
     }
     //------------------------------------------------------------------
-    public static function array_first_key(array $array)
+    public static function array_first_key(array $arr)
     {
-        reset($array);
-        return key($array);
+        reset($arr);
+        $first_key = key($arr);
+        return $first_key;
     }
     //------------------------------------------------------------------
     private static function determineNumberFormatType($num_format)
     {
-        $numFormat = is_array($num_format) ? implode('', $num_format) : $num_format;
-
-        $numFormat = preg_replace("/\[(Black|Blue|Cyan|Green|Magenta|Red|White|Yellow)\]/i", "", $numFormat);
-
-        switch ($numFormat) {
-            case 'GENERAL':
-                return 'n_auto';
-            case '@':
-                return 'n_string';
-            case '0':
-                return 'n_numeric';
-        }
-
-        $dateTimePatterns = [
-            '/[H]{1,2}:[M]{1,2}(?![^"]*+")/i',
-            '/[M]{1,2}:[S]{1,2}(?![^"]*+")/i',
-            '/[Y]{2,4}(?![^"]*+")/i',
-            '/[D]{1,2}(?![^"]*+")/i',
-            '/[M]{1,2}(?![^"]*+")/i',
-        ];
-
-        foreach ($dateTimePatterns as $pattern) {
-            if (preg_match($pattern, $numFormat)) {
-                return 'n_datetime';
-            }
-        }
-
-        $numericPatterns = [
-            '/\$(?![^"]*+")/',
-            '/%(?![^"]*+")/',
-            '/0(?![^"]*+")/',
-        ];
-
-        foreach ($numericPatterns as $pattern) {
-            if (preg_match($pattern, $numFormat)) {
-                return 'n_numeric';
-            }
-        }
-
+        $num_format = preg_replace("/\[(Black|Blue|Cyan|Green|Magenta|Red|White|Yellow)\]/i", "", $num_format);
+        if ($num_format == 'GENERAL') return 'n_auto';
+        if ($num_format == '@') return 'n_string';
+        if ($num_format == '0') return 'n_numeric';
+        if (preg_match('/[H]{1,2}:[M]{1,2}(?![^"]*+")/i', $num_format)) return 'n_datetime';
+        if (preg_match('/[M]{1,2}:[S]{1,2}(?![^"]*+")/i', $num_format)) return 'n_datetime';
+        if (preg_match('/[Y]{2,4}(?![^"]*+")/i', $num_format)) return 'n_date';
+        if (preg_match('/[D]{1,2}(?![^"]*+")/i', $num_format)) return 'n_date';
+        if (preg_match('/[M]{1,2}(?![^"]*+")/i', $num_format)) return 'n_date';
+        if (preg_match('/$(?![^"]*+")/', $num_format)) return 'n_numeric';
+        if (preg_match('/%(?![^"]*+")/', $num_format)) return 'n_numeric';
+        if (preg_match('/0(?![^"]*+")/', $num_format)) return 'n_numeric';
         return 'n_auto';
     }
     //------------------------------------------------------------------
     private static function numberFormatStandardized($num_format)
     {
         if ($num_format == 'money') {
-            return 'dollar';
-        } elseif ($num_format == 'number') {
-            return 'integer';
-        } elseif ($num_format == 'string') {
-            return '@';
-        } elseif ($num_format == 'integer') {
-            return '0';
-        } elseif ($num_format == 'date') {
-            return 'YYYY-MM-DD';
-        } elseif ($num_format == 'datetime') {
-            return 'YYYY-MM-DD HH:MM:SS';
-        } elseif ($num_format == 'time') {
-            return 'HH:MM:SS';
-        } elseif ($num_format == 'price') {
-            return '#,##0.00';
-        } elseif ($num_format == 'dollar') {
-            return '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
-        } elseif ($num_format == 'euro') {
-            return '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
-        } else {
-            return $num_format;
+            $num_format = 'dollar';
+        }
+        if ($num_format == 'number') {
+            $num_format = 'integer';
         }
 
+        if ($num_format == 'string')   $num_format = '@';
+        else if ($num_format == 'integer')  $num_format = '0';
+        else if ($num_format == 'date')     $num_format = 'YYYY-MM-DD';
+        else if ($num_format == 'datetime') $num_format = 'YYYY-MM-DD HH:MM:SS';
+        else if ($num_format == 'time')     $num_format = 'HH:MM:SS';
+        else if ($num_format == 'price')    $num_format = '#,##0.00';
+        else if ($num_format == 'dollar')   $num_format = '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
+        else if ($num_format == 'euro')     $num_format = '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
         $ignore_until = '';
         $escaped = '';
-
         for ($i = 0, $ix = strlen($num_format); $i < $ix; $i++) {
             $c = $num_format[$i];
             if ($ignore_until == '' && $c == '[')
@@ -1035,75 +1003,72 @@ class XLSXWriter
             else
                 $escaped .= $c;
         }
-
         return $escaped;
     }
     //------------------------------------------------------------------
-    public static function add_to_list_get_index(array &$haystack, $needle)
+    public static function add_to_list_get_index(&$haystack, $needle)
     {
-        $existingIdx = array_search($needle, $haystack, true);
-
-        if ($existingIdx === false) {
-            $existingIdx = count($haystack);
+        $existing_idx = array_search($needle, $haystack, $strict = true);
+        if ($existing_idx === false) {
+            $existing_idx = count($haystack);
             $haystack[] = $needle;
         }
-
-        return $existingIdx;
+        return $existing_idx;
     }
     //------------------------------------------------------------------
-    public static function convert_date_time($dateTime) //thanks to Excel::Writer::XLSX::Worksheet.pm (perl)
+    public static function convert_date_time($date_input) //thanks to Excel::Writer::XLSX::Worksheet.pm (perl)
     {
-        // Inicialización de variables
-        $days = 0;    // Número de días desde la época
-        $seconds = 0; // Tiempo expresado como fracción de 24 horas en segundos
+        $days    = 0;    # Number of days since epoch
+        $seconds = 0;    # Time expressed as fraction of 24h hours in seconds
         $year = $month = $day = 0;
-        $hour = $min = $sec = 0;
+        $hour = $min  = $sec = 0;
 
-        // Extraer año, mes y día
-        if (preg_match("/(\d{4})\-(\d{2})\-(\d{2})/", $dateTime, $matches)) {
+        $date_time = $date_input;
+        if (preg_match("/(\d{4})\-(\d{2})\-(\d{2})/", $date_time, $matches)) {
             list($junk, $year, $month, $day) = $matches;
         }
-
-        // Extraer hora, minuto y segundo
-        if (preg_match("/(\d+):(\d{2}):(\d{2})/", $dateTime, $matches)) {
+        if (preg_match("/(\d+):(\d{2}):(\d{2})/", $date_time, $matches)) {
             list($junk, $hour, $min, $sec) = $matches;
             $seconds = ($hour * 60 * 60 + $min * 60 + $sec) / (24 * 60 * 60);
         }
 
-        // Usando 1900 como época, no 1904, ignorando el caso especial de 1904
+        //using 1900 as epoch, not 1904, ignoring 1904 special case
 
-        // Casos especiales para Excel.
-        if ("$year-$month-$day" == '1899-12-31') return $seconds;    // Época de Excel 1900
-        if ("$year-$month-$day" == '1900-01-00') return $seconds;    // Época de Excel 1900
-        if ("$year-$month-$day" == '1900-02-29') return 60 + $seconds; // Día ficticio bisiesto de Excel
+        # Special cases for Excel.
+        if ("$year-$month-$day" == '1899-12-31')  return $seconds;    # Excel 1900 epoch
+        if ("$year-$month-$day" == '1900-01-00')  return $seconds;    # Excel 1900 epoch
+        if ("$year-$month-$day" == '1900-02-29')  return 60 + $seconds;    # Excel false leapday
 
-        // Calcular la fecha contando los días desde la época y ajustando por los años bisiestos.
-        $epoch = 1900;
+        # We calculate the date by calculating the number of days since the epoch
+        # and adjust for the number of leap days. We calculate the number of leap
+        # days by normalising the year in relation to the epoch. Thus the year 2000
+        # becomes 100 for 4 and 100 year leapdays and 400 for 400 year leapdays.
+        $epoch  = 1900;
         $offset = 0;
-        $norm = 300;
-        $range = $year - $epoch;
+        $norm   = 300;
+        $range  = $year - $epoch;
 
-        // Establecer los días de cada mes y comprobar si es un año bisiesto.
+        # Set month days and check for leap year.
         $leap = (($year % 400 == 0) || (($year % 4 == 0) && ($year % 100))) ? 1 : 0;
         $mdays = array(31, ($leap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
 
-        // Algunas comprobaciones de límites
+        # Some boundary checks
         if ($year != 0 || $month != 0 || $day != 0) {
             if ($year < $epoch || $year > 9999) return 0;
-            if ($month < 1 || $month > 12) return 0;
-            if ($day < 1 || $day > $mdays[$month - 1]) return 0;
+            if ($month < 1     || $month > 12)  return 0;
+            if ($day < 1       || $day > $mdays[$month - 1]) return 0;
         }
 
-        // Acumular el número de días desde la época.
-        $days = $day;    // Añadir días para el mes actual
-        $days += array_sum(array_slice($mdays, 0, $month - 1)); // Añadir días para meses anteriores
-        $days += $range * 365;                      // Añadir días para años anteriores
-        $days += intval(($range) / 4);             // Añadir días bisiestos
-        $days -= intval(($range + $offset) / 100); // Restar días bisiestos de 100 años
-        $days += intval(($range + $offset + $norm) / 400);  // Añadir días bisiestos de 400 años
-        $days -= $leap;                                      // Ya contado anteriormente
+        # Accumulate the number of days since the epoch.
+        $days = $day;    # Add days for current month
+        $days += array_sum(array_slice($mdays, 0, $month - 1));    # Add days for past months
+        $days += $range * 365;                      # Add days for past years
+        $days += intval(($range) / 4);             # Add leapdays
+        $days -= intval(($range + $offset) / 100); # Subtract 100 year leapdays
+        $days += intval(($range + $offset + $norm) / 400);  # Add 400 year leapdays
+        $days -= $leap;                                      # Already counted above
 
-        // Ajustar por el tratamiento erróneo de Excel de 1900 como año bisiesto.
+        # Adjust for Excel erroneously treating 1900 as a leap year.
         if ($days > 59) {
             $days++;
         }
