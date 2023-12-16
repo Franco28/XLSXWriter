@@ -175,8 +175,8 @@ class XLSXWriter
      */
     public function writeToFile($filename)
     {
-        foreach ($this->sheets as $sheetName => $sheet) {
-            self::finalizeSheet($sheetName); // Ensure all footers have been written
+        foreach ($this->sheets as $sheetname => $sheet) {
+            self::finalizeSheet($sheetname); // Ensure all footers have been written
         }
 
         // Check if the file exists and is writable
@@ -327,7 +327,7 @@ class XLSXWriter
      * Initializes a worksheet with the specified name, column types, and optional settings,
      * and writes the header row with the provided column names and types.
      *
-     * @param string $sheetName - The name of the worksheet.
+     * @param string $sheetname - The name of the worksheet.
      * @param array $headerTypes - An array specifying column names and their corresponding types.
      * @param array|null $columnOptions - Additional options for the worksheet (optional).
      *
@@ -344,9 +344,9 @@ class XLSXWriter
      * Example Usage:
      *   $writer->writeSheetHeader("Sheet1", ["Name" => "string", "Age" => "n_numeric"], ['widths' => [20, 10], 'auto_filter' => 1]);
      */
-    public function writeSheetHeader($sheetName, array $headerTypes, $columnOptions = null)
+    public function writeSheetHeader($sheetname, array $headerTypes, $columnOptions = null)
     {
-        if (empty($sheetName) || empty($headerTypes) || !empty($this->sheets[$sheetName])) {
+        if (empty($sheetname) || empty($headerTypes) || !empty($this->sheets[$sheetname])) {
             return;
         }
 
@@ -365,8 +365,8 @@ class XLSXWriter
         $freezeRows = isset($columnOptions['freeze_rows']) ? intval($columnOptions['freeze_rows']) : false;
         $freezeColumns = isset($columnOptions['freeze_columns']) ? intval($columnOptions['freeze_columns']) : false;
 
-        self::initializeSheet($sheetName, $columnWidths, $autoFilter, $freezeRows, $freezeColumns);
-        $sheet = &$this->sheets[$sheetName];
+        self::initializeSheet($sheetname, $columnWidths, $autoFilter, $freezeRows, $freezeColumns);
+        $sheet = &$this->sheets[$sheetname];
 
         $sheet->columns = $this->initializeColumnTypes($headerTypes);
 
@@ -384,13 +384,13 @@ class XLSXWriter
             $sheet->row_count++;
         }
 
-        $this->current_sheet = $sheetName;
+        $this->current_sheet = $sheetname;
     }
 
     /**
      * Writes a row of data to the specified worksheet with the given values and optional settings.
      *
-     * @param string $sheetName - The name of the worksheet.
+     * @param string $sheetname - The name of the worksheet.
      * @param array $row - An array representing the values of the row.
      * @param array|null $rowOptions - Additional options for the row (optional).
      *
@@ -402,14 +402,14 @@ class XLSXWriter
      * Example Usage:
      *   $writer->writeSheetRow("Sheet1", ["John Doe", 25, "Male"], ['height' => 15, 'hidden' => false, 'collapsed' => true]);
      */
-    public function writeSheetRow($sheetName, array $row, $rowOptions = null)
+    public function writeSheetRow($sheetname, array $row, $rowOptions = null)
     {
-        if (empty($sheetName)) {
+        if (empty($sheetname)) {
             return;
         }
 
-        $this->initializeSheet($sheetName);
-        $sheet = &$this->sheets[$sheetName];
+        $this->initializeSheet($sheetname);
+        $sheet = &$this->sheets[$sheetname];
 
         if (count($sheet->columns) < count($row)) {
             $defaultColumnTypes = $this->initializeColumnTypes(array_fill(0, count($row), 'GENERAL')); // will map to n_auto
@@ -440,7 +440,7 @@ class XLSXWriter
 
         $sheet->file_writer->write('</row>');
         $sheet->row_count++;
-        $this->current_sheet = $sheetName;
+        $this->current_sheet = $sheetname;
     }
 
     public function countSheetRows($sheet_name = '')
@@ -449,13 +449,13 @@ class XLSXWriter
         return array_key_exists($sheet_name, $this->sheets) ? $this->sheets[$sheet_name]->row_count : 0;
     }
 
-    protected function finalizeSheet($sheetName)
+    protected function finalizeSheet($sheetname)
     {
-        if (empty($sheetName) || $this->sheets[$sheetName]->finalized) {
+        if (empty($sheetname) || $this->sheets[$sheetname]->finalized) {
             return;
         }
 
-        $sheet = &$this->sheets[$sheetName];
+        $sheet = &$this->sheets[$sheetname];
 
         $sheet->file_writer->write('</sheetData>');
 
