@@ -331,14 +331,14 @@ class XLSXWriter
         if (!$suppressRow) {
             $headerRow = array_keys($headerTypes);
 
-            $sheet->fileWriter->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . (1) . '">');
+            $sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . (1) . '">');
 
             foreach ($headerRow as $c => $v) {
                 $cellStyleIdx = empty($style) ? $sheet->columns[$c]['default_cell_style'] : $this->addCellStyle('GENERAL', json_encode(isset($style[0]) ? $style[$c] : $style));
-                $this->writeCell($sheet->fileWriter, 0, $c, $v, $numberFormatType = 'n_string', $cellStyleIdx);
+                $this->writeCell($sheet->file_writer, 0, $c, $v, $numberFormatType = 'n_string', $cellStyleIdx);
             }
 
-            $sheet->fileWriter->write('</row>');
+            $sheet->file_writer->write('</row>');
             $sheet->rowCount++;
         }
 
@@ -365,9 +365,9 @@ class XLSXWriter
             $hidden = isset($rowOptions['hidden']) && (bool)$rowOptions['hidden'];
             $collapsed = isset($rowOptions['collapsed']) && (bool)$rowOptions['collapsed'];
 
-            $sheet->fileWriter->write('<row collapsed="' . ($collapsed ? 'true' : 'false') . '" customFormat="false" customHeight="' . ($customHeight ? 'true' : 'false') . '" hidden="' . ($hidden ? 'true' : 'false') . '" ht="' . $height . '" outlineLevel="0" r="' . ($sheet->rowCount + 1) . '">');
+            $sheet->file_writer->write('<row collapsed="' . ($collapsed ? 'true' : 'false') . '" customFormat="false" customHeight="' . ($customHeight ? 'true' : 'false') . '" hidden="' . ($hidden ? 'true' : 'false') . '" ht="' . $height . '" outlineLevel="0" r="' . ($sheet->rowCount + 1) . '">');
         } else {
-            $sheet->fileWriter->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . ($sheet->rowCount + 1) . '">');
+            $sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . ($sheet->rowCount + 1) . '">');
         }
 
         $style = &$rowOptions;
@@ -377,11 +377,11 @@ class XLSXWriter
             $numberFormat = $sheet->columns[$columnIndex]['number_format'];
             $numberFormatType = $sheet->columns[$columnIndex]['number_format_type'];
             $cellStyleIdx = empty($style) ? $sheet->columns[$columnIndex]['default_cell_style'] : $this->addCellStyle($numberFormat, json_encode(isset($style[0]) ? $style[$columnIndex] : $style));
-            $this->writeCell($sheet->fileWriter, $sheet->rowCount, $columnIndex, $value, $numberFormatType, $cellStyleIdx);
+            $this->writeCell($sheet->file_writer, $sheet->rowCount, $columnIndex, $value, $numberFormatType, $cellStyleIdx);
             $columnIndex++;
         }
 
-        $sheet->fileWriter->write('</row>');
+        $sheet->file_writer->write('</row>');
         $sheet->rowCount++;
         $this->current_sheet = $sheetName;
     }
@@ -400,36 +400,36 @@ class XLSXWriter
 
         $sheet = &$this->sheets[$sheetName];
 
-        $sheet->fileWriter->write('</sheetData>');
+        $sheet->file_writer->write('</sheetData>');
 
         if (!empty($sheet->mergeCells)) {
-            $sheet->fileWriter->write('<mergeCells>');
+            $sheet->file_writer->write('<mergeCells>');
             foreach ($sheet->mergeCells as $range) {
-                $sheet->fileWriter->write('<mergeCell ref="' . $range . '"/>');
+                $sheet->file_writer->write('<mergeCell ref="' . $range . '"/>');
             }
-            $sheet->fileWriter->write('</mergeCells>');
+            $sheet->file_writer->write('</mergeCells>');
         }
 
         $maxCell = self::xlsCell($sheet->rowCount - 1, count($sheet->columns) - 1);
 
         if ($sheet->autoFilter) {
-            $sheet->fileWriter->write('<autoFilter ref="A1:' . $maxCell . '"/>');
+            $sheet->file_writer->write('<autoFilter ref="A1:' . $maxCell . '"/>');
         }
 
-        $sheet->fileWriter->write('<printOptions headings="false" gridLines="false" gridLinesSet="true" horizontalCentered="false" verticalCentered="false"/>');
-        $sheet->fileWriter->write('<pageMargins left="0.5" right="0.5" top="1.0" bottom="1.0" header="0.5" footer="0.5"/>');
-        $sheet->fileWriter->write('<pageSetup blackAndWhite="false" cellComments="none" copies="1" draft="false" firstPageNumber="1" fitToHeight="1" fitToWidth="1" horizontalDpi="300" orientation="portrait" pageOrder="downThenOver" paperSize="1" scale="100" useFirstPageNumber="true" usePrinterDefaults="false" verticalDpi="300"/>');
-        $sheet->fileWriter->write('<headerFooter differentFirst="false" differentOddEven="false">');
-        $sheet->fileWriter->write('<oddHeader>&amp;C&amp;&quot;Times New Roman,Regular&quot;&amp;12&amp;A</oddHeader>');
-        $sheet->fileWriter->write('<oddFooter>&amp;C&amp;&quot;Times New Roman,Regular&quot;&amp;12Page &amp;P</oddFooter>');
-        $sheet->fileWriter->write('</headerFooter>');
-        $sheet->fileWriter->write('</worksheet>');
+        $sheet->file_writer->write('<printOptions headings="false" gridLines="false" gridLinesSet="true" horizontalCentered="false" verticalCentered="false"/>');
+        $sheet->file_writer->write('<pageMargins left="0.5" right="0.5" top="1.0" bottom="1.0" header="0.5" footer="0.5"/>');
+        $sheet->file_writer->write('<pageSetup blackAndWhite="false" cellComments="none" copies="1" draft="false" firstPageNumber="1" fitToHeight="1" fitToWidth="1" horizontalDpi="300" orientation="portrait" pageOrder="downThenOver" paperSize="1" scale="100" useFirstPageNumber="true" usePrinterDefaults="false" verticalDpi="300"/>');
+        $sheet->file_writer->write('<headerFooter differentFirst="false" differentOddEven="false">');
+        $sheet->file_writer->write('<oddHeader>&amp;C&amp;&quot;Times New Roman,Regular&quot;&amp;12&amp;A</oddHeader>');
+        $sheet->file_writer->write('<oddFooter>&amp;C&amp;&quot;Times New Roman,Regular&quot;&amp;12Page &amp;P</oddFooter>');
+        $sheet->file_writer->write('</headerFooter>');
+        $sheet->file_writer->write('</worksheet>');
 
         $maxCellTag = '<dimension ref="A1:' . $maxCell . '"/>';
         $paddingLength = $sheet->maxCellTagEnd - $sheet->maxCellTagStart - strlen($maxCellTag);
-        $sheet->fileWriter->fseek($sheet->maxCellTagStart);
-        $sheet->fileWriter->write($maxCellTag . str_repeat(" ", $paddingLength));
-        $sheet->fileWriter->close();
+        $sheet->file_writer->fseek($sheet->maxCellTagStart);
+        $sheet->file_writer->write($maxCellTag . str_repeat(" ", $paddingLength));
+        $sheet->file_writer->close();
         $sheet->finalized = true;
     }
 
@@ -612,8 +612,8 @@ class XLSXWriter
         $file->write('<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">');
 
         // Write number formats
-        $file->write('<numFmts count="' . count($this->numberFormats) . '">');
-        foreach ($this->numberFormats as $i => $format) {
+        $file->write('<numFmts count="' . count($this->number_formats) . '">');
+        foreach ($this->number_formats as $i => $format) {
             $file->write('<numFmt numFmtId="' . (164 + $i) . '" formatCode="' . self::xmlspecialchars($format) . '" />');
         }
         $file->write('</numFmts>');
