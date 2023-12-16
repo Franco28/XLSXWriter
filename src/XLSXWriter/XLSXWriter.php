@@ -210,7 +210,7 @@ class XLSXWriter
             $zip->addFile($sheet->filename, "xl/worksheets/" . $sheet->xmlname);
         }
         $zip->addFromString("xl/workbook.xml", self::buildWorkbookXML());
-        $zip->addFile($this->writeStylesXML(), "xl/styles.xml");  //$zip->addFromString("xl/styles.xml"           , self::buildStylesXML() );
+        $zip->addFile($this->writeStylesXML(), "xl/styles.xml");
         $zip->addFromString("[Content_Types].xml", self::buildContentTypesXML());
 
         $zip->addEmptyDir("xl/_rels/");
@@ -642,18 +642,18 @@ class XLSXWriter
 
         $temporary_filename = $this->tempFilename();
         $file = new XLSXWriter_BuffererWriter($temporary_filename);
+
         $file->write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n");
         $file->write('<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">');
+
+        // Write number formats
         $file->write('<numFmts count="' . count($this->number_formats) . '">');
         foreach ($this->number_formats as $i => $v) {
             $file->write('<numFmt numFmtId="' . (164 + $i) . '" formatCode="' . self::xmlspecialchars($v) . '" />');
         }
-        //$file->write(		'<numFmt formatCode="GENERAL" numFmtId="164"/>');
-        //$file->write(		'<numFmt formatCode="[$$-1009]#,##0.00;[RED]\-[$$-1009]#,##0.00" numFmtId="165"/>');
-        //$file->write(		'<numFmt formatCode="YYYY-MM-DD\ HH:MM:SS" numFmtId="166"/>');
-        //$file->write(		'<numFmt formatCode="YYYY-MM-DD" numFmtId="167"/>');
         $file->write('</numFmts>');
 
+        // Write fonts
         $file->write('<fonts count="' . (count($fonts)) . '">');
         $file->write('<font><name val="Arial"/><charset val="1"/><family val="2"/><sz val="10"/></font>');
         $file->write('<font><name val="Arial"/><family val="0"/><sz val="10"/></font>');
@@ -661,7 +661,7 @@ class XLSXWriter
         $file->write('<font><name val="Arial"/><family val="0"/><sz val="10"/></font>');
 
         foreach ($fonts as $font) {
-            if (!empty($font)) { //fonts have 4 empty placeholders in array to offset the 4 static xml entries above
+            if (!empty($font)) {
                 $f = json_decode($font, true);
                 $file->write('<font>');
                 $file->write('<name val="' . htmlspecialchars($f['name']) . '"/><charset val="1"/><family val="' . intval($f['family']) . '"/>');
@@ -686,20 +686,22 @@ class XLSXWriter
         }
         $file->write('</fonts>');
 
+        // Write fills
         $file->write('<fills count="' . (count($fills)) . '">');
         $file->write('<fill><patternFill patternType="none"/></fill>');
         $file->write('<fill><patternFill patternType="gray125"/></fill>');
         foreach ($fills as $fill) {
-            if (!empty($fill)) { //fills have 2 empty placeholders in array to offset the 2 static xml entries above
+            if (!empty($fill)) {
                 $file->write('<fill><patternFill patternType="solid"><fgColor rgb="' . strval($fill) . '"/><bgColor indexed="64"/></patternFill></fill>');
             }
         }
         $file->write('</fills>');
 
+        // Write borders
         $file->write('<borders count="' . (count($borders)) . '">');
         $file->write('<border diagonalDown="false" diagonalUp="false"><left/><right/><top/><bottom/><diagonal/></border>');
         foreach ($borders as $border) {
-            if (!empty($border)) { //fonts have an empty placeholder in the array to offset the static xml entry above
+            if (!empty($border)) {
                 $pieces = json_decode($border, true);
                 $border_style = !empty($pieces['style']) ? $pieces['style'] : 'hair';
                 $border_color = !empty($pieces['color']) ? '<color rgb="' . strval($pieces['color']) . '"/>' : '';
@@ -738,13 +740,10 @@ class XLSXWriter
         $file->write('<xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="44"/>');
         $file->write('<xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="42"/>');
         $file->write('<xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="9"/>');
+        $file->write('</xf>');
         $file->write('</cellStyleXfs>');
 
         $file->write('<cellXfs count="' . (count($style_indexes)) . '">');
-        //$file->write(		'<xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="164" xfId="0"/>');
-        //$file->write(		'<xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="165" xfId="0"/>');
-        //$file->write(		'<xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="166" xfId="0"/>');
-        //$file->write(		'<xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="167" xfId="0"/>');
         foreach ($style_indexes as $v) {
             $applyAlignment = isset($v['alignment']) ? 'true' : 'false';
             $wrapText = !empty($v['wrap_text']) ? 'true' : 'false';
@@ -755,13 +754,14 @@ class XLSXWriter
             $borderIdx = isset($v['border_idx']) ? intval($v['border_idx']) : 0;
             $fillIdx = isset($v['fill_idx']) ? intval($v['fill_idx']) : 0;
             $fontIdx = isset($v['font_idx']) ? intval($v['font_idx']) : 0;
-            //$file->write('<xf applyAlignment="'.$applyAlignment.'" applyBorder="'.$applyBorder.'" applyFont="'.$applyFont.'" applyProtection="false" borderId="'.($borderIdx).'" fillId="'.($fillIdx).'" fontId="'.($fontIdx).'" numFmtId="'.(164+$v['num_fmt_idx']).'" xfId="0"/>');
             $file->write('<xf applyAlignment="' . $applyAlignment . '" applyBorder="' . $applyBorder . '" applyFont="' . $applyFont . '" applyProtection="false" borderId="' . ($borderIdx) . '" fillId="' . ($fillIdx) . '" fontId="' . ($fontIdx) . '" numFmtId="' . (164 + $v['num_fmt_idx']) . '" xfId="0">');
             $file->write('	<alignment horizontal="' . $horizAlignment . '" vertical="' . $vertAlignment . '" textRotation="0" wrapText="' . $wrapText . '" indent="0" shrinkToFit="false"/>');
             $file->write('	<protection locked="true" hidden="false"/>');
             $file->write('</xf>');
         }
+
         $file->write('</cellXfs>');
+
         $file->write('<cellStyles count="6">');
         $file->write('<cellStyle builtinId="0" customBuiltin="false" name="Normal" xfId="0"/>');
         $file->write('<cellStyle builtinId="3" customBuiltin="false" name="Comma" xfId="15"/>');
@@ -770,7 +770,9 @@ class XLSXWriter
         $file->write('<cellStyle builtinId="7" customBuiltin="false" name="Currency [0]" xfId="18"/>');
         $file->write('<cellStyle builtinId="5" customBuiltin="false" name="Percent" xfId="19"/>');
         $file->write('</cellStyles>');
+
         $file->write('</styleSheet>');
+
         $file->close();
         return $temporary_filename;
     }
