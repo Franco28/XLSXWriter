@@ -935,17 +935,22 @@ class XLSXWriter
 
     //------------------------------------------------------------------
     /*
-	 * @param $row_number int, zero based
-	 * @param $column_number int, zero based
-	 * @param $absolute bool
-	 * @return Cell label/coordinates, ex: A1, C3, AA42 (or if $absolute==true: $A$1, $C$3, $AA$42)
-	 * */
+    * Convert row and column numbers into Excel cell coordinates.
+    *
+    * @param int $row_number Zero-based row number.
+    * @param int $column_number Zero-based column number.
+    * @param bool $absolute If true, return cell coordinates with absolute references (e.g., $A$1).
+    *
+    * @return string Cell label/coordinates, e.g., A1, C3, AA42 (or if $absolute==true: $A$1, $C$3, $AA$42).
+    */
     public static function xlsCell($row_number, $column_number, $absolute = false)
     {
         $n = $column_number;
         for ($r = ""; $n >= 0; $n = intval($n / 26) - 1) {
             $r = chr($n % 26 + 0x41) . $r;
         }
+        $r = strtoupper($r);
+
         if ($absolute) {
             return '$' . $r . '$' . ($row_number + 1);
         }
