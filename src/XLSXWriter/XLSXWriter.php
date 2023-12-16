@@ -1013,6 +1013,8 @@ class XLSXWriter
             return '[$$-1009]#,##0.00;[RED]-[$$-1009]#,##0.00';
         } elseif ($num_format == 'euro') {
             return '#,##0.00 [$€-407];[RED]-#,##0.00 [$€-407]';
+        } else {
+            return $num_format;
         }
 
         $ignore_until = '';
