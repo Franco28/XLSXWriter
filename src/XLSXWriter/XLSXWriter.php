@@ -567,32 +567,39 @@ class XLSXWriter
             $style = @json_decode($style_json_string, $as_assoc = true);
 
             $style_indexes[$i] = array('num_fmt_idx' => $number_format_idx); //initialize entry
+
             if (isset($style['border']) && is_string($style['border'])) //border is a comma delimited str
             {
                 $border_value['side'] = array_intersect(explode(",", $style['border']), $border_allowed);
                 if (isset($style['border-style']) && in_array($style['border-style'], $border_style_allowed)) {
                     $border_value['style'] = $style['border-style'];
                 }
+
                 if (isset($style['border-color']) && is_string($style['border-color']) && $style['border-color'][0] == '#') {
                     $v = substr($style['border-color'], 1, 6);
                     $v = strlen($v) == 3 ? $v[0] . $v[0] . $v[1] . $v[1] . $v[2] . $v[2] : $v; // expand cf0 => ccff00
                     $border_value['color'] = "FF" . strtoupper($v);
                 }
+
                 $style_indexes[$i]['border_idx'] = self::add_to_list_get_index($borders, json_encode($border_value));
             }
+
             if (isset($style['fill']) && is_string($style['fill']) && $style['fill'][0] == '#') {
                 $v = substr($style['fill'], 1, 6);
                 $v = strlen($v) == 3 ? $v[0] . $v[0] . $v[1] . $v[1] . $v[2] . $v[2] : $v; // expand cf0 => ccff00
                 $style_indexes[$i]['fill_idx'] = self::add_to_list_get_index($fills, "FF" . strtoupper($v));
             }
+
             if (isset($style['halign']) && in_array($style['halign'], $horizontal_allowed)) {
                 $style_indexes[$i]['alignment'] = true;
                 $style_indexes[$i]['halign'] = $style['halign'];
             }
+
             if (isset($style['valign']) && in_array($style['valign'], $vertical_allowed)) {
                 $style_indexes[$i]['alignment'] = true;
                 $style_indexes[$i]['valign'] = $style['valign'];
             }
+
             if (isset($style['wrap_text'])) {
                 $style_indexes[$i]['alignment'] = true;
                 $style_indexes[$i]['wrap_text'] = (bool)$style['wrap_text'];
@@ -602,6 +609,7 @@ class XLSXWriter
             if (isset($style['font-size'])) {
                 $font['size'] = floatval($style['font-size']); //floatval to allow "10.5" etc
             }
+
             if (isset($style['font']) && is_string($style['font'])) {
                 if ($style['font'] == 'Comic Sans MS') {
                     $font['family'] = 4;
@@ -614,6 +622,7 @@ class XLSXWriter
                 }
                 $font['name'] = strval($style['font']);
             }
+
             if (isset($style['font-style']) && is_string($style['font-style'])) {
                 if (strpos($style['font-style'], 'bold') !== false) {
                     $font['bold'] = true;
@@ -637,6 +646,7 @@ class XLSXWriter
                 $style_indexes[$i]['font_idx'] = self::add_to_list_get_index($fonts, json_encode($font));
             }
         }
+
         return array('fills' => $fills, 'fonts' => $fonts, 'borders' => $borders, 'styles' => $style_indexes);
     }
 
@@ -783,7 +793,6 @@ class XLSXWriter
         $file->close();
         return $temporary_filename;
     }
-
 
     protected function buildAppXML()
     {
