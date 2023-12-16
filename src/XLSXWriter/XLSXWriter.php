@@ -381,7 +381,7 @@ class XLSXWriter
             }
 
             $sheet->file_writer->write('</row>');
-            $sheet->rowCount++;
+            $sheet->row_count++;
         }
 
         $this->current_sheet = $sheetName;
@@ -422,9 +422,9 @@ class XLSXWriter
             $hidden = isset($rowOptions['hidden']) && (bool)$rowOptions['hidden'];
             $collapsed = isset($rowOptions['collapsed']) && (bool)$rowOptions['collapsed'];
 
-            $sheet->file_writer->write('<row collapsed="' . ($collapsed ? 'true' : 'false') . '" customFormat="false" customHeight="' . ($customHeight ? 'true' : 'false') . '" hidden="' . ($hidden ? 'true' : 'false') . '" ht="' . $height . '" outlineLevel="0" r="' . ($sheet->rowCount + 1) . '">');
+            $sheet->file_writer->write('<row collapsed="' . ($collapsed ? 'true' : 'false') . '" customFormat="false" customHeight="' . ($customHeight ? 'true' : 'false') . '" hidden="' . ($hidden ? 'true' : 'false') . '" ht="' . $height . '" outlineLevel="0" r="' . ($sheet->row_count + 1) . '">');
         } else {
-            $sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . ($sheet->rowCount + 1) . '">');
+            $sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . ($sheet->row_count + 1) . '">');
         }
 
         $style = &$rowOptions;
@@ -434,12 +434,12 @@ class XLSXWriter
             $numberFormat = $sheet->columns[$columnIndex]['number_format'];
             $numberFormatType = $sheet->columns[$columnIndex]['number_format_type'];
             $cellStyleIdx = empty($style) ? $sheet->columns[$columnIndex]['default_cell_style'] : $this->addCellStyle($numberFormat, json_encode(isset($style[0]) ? $style[$columnIndex] : $style));
-            $this->writeCell($sheet->file_writer, $sheet->rowCount, $columnIndex, $value, $numberFormatType, $cellStyleIdx);
+            $this->writeCell($sheet->file_writer, $sheet->row_count, $columnIndex, $value, $numberFormatType, $cellStyleIdx);
             $columnIndex++;
         }
 
         $sheet->file_writer->write('</row>');
-        $sheet->rowCount++;
+        $sheet->row_count++;
         $this->current_sheet = $sheetName;
     }
 
@@ -467,7 +467,7 @@ class XLSXWriter
             $sheet->file_writer->write('</mergeCells>');
         }
 
-        $maxCell = self::xlsCell($sheet->rowCount - 1, count($sheet->columns) - 1);
+        $maxCell = self::xlsCell($sheet->row_count - 1, count($sheet->columns) - 1);
 
         if ($sheet->autoFilter) {
             $sheet->file_writer->write('<autoFilter ref="A1:' . $maxCell . '"/>');
