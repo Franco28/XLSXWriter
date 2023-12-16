@@ -323,6 +323,27 @@ class XLSXWriter
         return $column_types;
     }
 
+    /**
+     * Initializes a worksheet with the specified name, column types, and optional settings,
+     * and writes the header row with the provided column names and types.
+     *
+     * @param string $sheetName - The name of the worksheet.
+     * @param array $headerTypes - An array specifying column names and their corresponding types.
+     * @param array|null $columnOptions - Additional options for the worksheet (optional).
+     *
+     * Optional Settings in $columnOptions:
+     *   - 'suppress_row': Option to suppress the header row.
+     *   - 'widths': An array specifying custom widths for columns.
+     *   - 'auto_filter': Integer indicating the row index for auto-filtering.
+     *   - 'freeze_rows': Integer specifying the number of rows to freeze.
+     *   - 'freeze_columns': Integer specifying the number of columns to freeze.
+     *
+     * Deprecated Feature:
+     *   - Directly passing a boolean value to 'suppress_row' is deprecated and will be removed.
+     *
+     * Example Usage:
+     *   $writer->writeSheetHeader("Sheet1", ["Name" => "string", "Age" => "n_numeric"], ['widths' => [20, 10], 'auto_filter' => 1]);
+     */
     public function writeSheetHeader($sheetName, array $headerTypes, $columnOptions = null)
     {
         if (empty($sheetName) || empty($headerTypes) || !empty($this->sheets[$sheetName])) {
@@ -366,6 +387,21 @@ class XLSXWriter
         $this->current_sheet = $sheetName;
     }
 
+    /**
+     * Writes a row of data to the specified worksheet with the given values and optional settings.
+     *
+     * @param string $sheetName - The name of the worksheet.
+     * @param array $row - An array representing the values of the row.
+     * @param array|null $rowOptions - Additional options for the row (optional).
+     *
+     * Optional Settings in $rowOptions:
+     *   - 'height': Float value indicating the height of the row.
+     *   - 'hidden': Boolean indicating if the row is hidden.
+     *   - 'collapsed': Boolean indicating if the row is collapsed.
+     *
+     * Example Usage:
+     *   $writer->writeSheetRow("Sheet1", ["John Doe", 25, "Male"], ['height' => 15, 'hidden' => false, 'collapsed' => true]);
+     */
     public function writeSheetRow($sheetName, array $row, $rowOptions = null)
     {
         if (empty($sheetName)) {
@@ -454,6 +490,19 @@ class XLSXWriter
         $sheet->finalized = true;
     }
 
+    /**
+     * Marks a merged cell range in the specified worksheet.
+     *
+     * @param string $sheet_name - The name of the worksheet.
+     * @param int $start_cell_row - The row number of the starting cell.
+     * @param int $start_cell_column - The column number of the starting cell.
+     * @param int $end_cell_row - The row number of the ending cell.
+     * @param int $end_cell_column - The column number of the ending cell.
+     *
+     * Example Usage:
+     *   $writer->markMergedCell("Sheet1", 1, 1, 3, 3);
+     *   // Merges the cells from A1 to C3 in the "Sheet1" worksheet.
+     */
     public function markMergedCell($sheet_name, $start_cell_row, $start_cell_column, $end_cell_row, $end_cell_column)
     {
         if (empty($sheet_name) || $this->sheets[$sheet_name]->finalized)
@@ -467,6 +516,23 @@ class XLSXWriter
         $sheet->merge_cells[] = $startCell . ":" . $endCell;
     }
 
+    /**
+     * Writes data to a worksheet, including optional header types.
+     *
+     * @param array $data - The data to be written to the worksheet.
+     * @param string $sheet_name - The name of the worksheet. Defaults to 'Sheet1' if not provided.
+     * @param array $header_types - The associative array specifying column types for header cells.
+     *                              Example: ['Column1' => 'string', 'Column2' => 'numeric']
+     *
+     * Example Usage:
+     *   $data = [
+     *       ['Name', 'Age', 'City'],
+     *       ['John Doe', 25, 'New York'],
+     *       ['Jane Smith', 30, 'San Francisco'],
+     *   ];
+     *   $headerTypes = ['Name' => 'string', 'Age' => 'numeric', 'City' => 'string'];
+     *   $writer->writeSheet($data, 'MySheet', $headerTypes);
+     */
     public function writeSheet(array $data, $sheet_name = '', array $header_types = array())
     {
         $sheet_name = empty($sheet_name) ? 'Sheet1' : $sheet_name;
