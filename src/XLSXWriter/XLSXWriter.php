@@ -1064,8 +1064,6 @@ class XLSXWriter
 
 class XLSXWriter_BuffererWriter
 {
-    const BUFFER_LIMIT = 8191;
-
     protected $fd = null;
     protected $buffer = '';
     protected $check_utf8 = false;
@@ -1073,24 +1071,17 @@ class XLSXWriter_BuffererWriter
     public function __construct($filename, $fd_fopen_flags = 'w', $check_utf8 = false)
     {
         $this->check_utf8 = $check_utf8;
-        $this->fd = @fopen($filename, $fd_fopen_flags);
+        $this->fd = fopen($filename, $fd_fopen_flags);
         if ($this->fd === false) {
-            throw new Exception("Unable to open $filename for writing.");
+            XLSXWriter::log("Unable to open $filename for writing.");
         }
     }
 
     public function write($string)
     {
         $this->buffer .= $string;
-        if (isset($this->buffer[self::BUFFER_LIMIT])) {
+        if (isset($this->buffer[8191])) {
             $this->purge();
-        }
-    }
-
-    public function directWrite($string)
-    {
-        if ($this->fd) {
-            fwrite($this->fd, $string);
         }
     }
 
@@ -1098,7 +1089,8 @@ class XLSXWriter_BuffererWriter
     {
         if ($this->fd) {
             if ($this->check_utf8 && !self::isValidUTF8($this->buffer)) {
-                throw new Exception("Error, invalid UTF8 encoding detected.");
+                XLSXWriter::log("Error, invalid UTF8 encoding detected.");
+                $this->check_utf8 = false;
             }
             fwrite($this->fd, $this->buffer);
             $this->buffer = '';
