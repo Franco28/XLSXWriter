@@ -55,36 +55,40 @@ class SpreadsheetBuilder
      * Sets the headers (first row of the table) with a custom style.
      *
      * @param array $headers
+     * @param array $customStyle
      */
-    public function setHeaders(array $headers): void
+    public function setHeaders(array $headers, array $customStyle = []): void
     {
+        // 1) Keep track of how many headers there are
         $this->headersCount = count($headers);
 
-        // Start writing headers at the defined offset
+        // 2) Start writing headers at the defined offset
         $columnIndex = $this->startColumnIndex;
+        $sheet = $this->spreadsheet->getActiveSheet();
 
-        foreach ($headers as $header) {
+        // Use the array KEY as the visible header text, VALUE as the data type (if needed)
+        foreach ($headers as $headerName => $type) {
             $colLetter = $this->columnIndexToLetter($columnIndex);
-            $this->spreadsheet->getActiveSheet()->setCellValue($colLetter . $this->currentRow, $header);
+            $sheet->setCellValue($colLetter . $this->currentRow, $headerName);
             $columnIndex++;
         }
 
-        // Calculate the header range for styling (e.g., D4:F4)
+        // 3) Calculate the header range for styling (e.g., D4:F4)
         $firstColLetter = $this->columnIndexToLetter($this->startColumnIndex);
         $lastColLetter  = $this->columnIndexToLetter($columnIndex - 1);
         $range          = "{$firstColLetter}{$this->currentRow}:{$lastColLetter}{$this->currentRow}";
 
-        // Define a style for the headers
-        $headerStyle = [
+        // 4) Define default style for the headers
+        $defaultStyle = [
             'font' => [
                 'bold' => true,
-                'size' => 12,
+                'size' => 16,         // Default font size
                 'name' => 'Arial'
             ],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
                 'startColor' => [
-                    'argb' => 'FFFFCC00' // Yellow background
+                    'argb' => 'FFFFCC00' // Default background color (yellow)
                 ]
             ],
             'borders' => [
@@ -95,10 +99,14 @@ class SpreadsheetBuilder
             ]
         ];
 
-        // Apply the header style
-        $this->spreadsheet->getActiveSheet()->getStyle($range)->applyFromArray($headerStyle);
+        // 5) Merge the user-provided style with the default style
+        //    array_replace_recursive() ensures nested keys are overwritten properly.
+        $finalStyle = array_replace_recursive($defaultStyle, $customStyle);
 
-        // Move down one row for data
+        // 6) Apply the merged style to the header range
+        $sheet->getStyle($range)->applyFromArray($finalStyle);
+
+        // 7) Move down one row for data
         $this->currentRow++;
     }
 

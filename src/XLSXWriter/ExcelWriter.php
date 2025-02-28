@@ -33,11 +33,12 @@ class ExcelWriter
      * Sets the headers (first row of the table).
      *
      * @param array $headers
+     * @param array $customStyle
      * @return $this
      */
-    public function setHeaders(array $headers): self
+    public function setHeaders(array $headers, array $customStyle = []): self
     {
-        $this->spreadsheetBuilder->setHeaders($headers);
+        $this->spreadsheetBuilder->setHeaders($headers, $customStyle);
         return $this;
     }
 
