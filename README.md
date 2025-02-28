@@ -38,7 +38,7 @@ use XLSXWriter\ExcelWriter;
 
 $excelWriter = new ExcelWriter();
 
-// Set headers with custom styling
+// Set headers (automatically styled)
 $excelWriter->setHeaders(['Name', 'Age', 'Email']);
 
 // Add data rows
@@ -86,11 +86,35 @@ class ExcelController extends Controller
 }
 ```
 
+## Positioning Your Table with Offsets
+
+```php
+use XLSXWriter\ExcelWriter;
+
+$excelWriter = new ExcelWriter();
+
+// Set the offset to (3, 3) => D4
+$excelWriter->setOffset(3, 3);
+
+// Define headers and rows
+$excelWriter->setHeaders(['Fecha', 'Total']);
+$excelWriter->addRow(['2023-01-01', '1000']);
+$excelWriter->addRow(['2023-01-02', '1500']);
+
+// Save the Excel file to disk
+$filename = 'offset_example.xlsx';
+if ($excelWriter->write($filename)) {
+    echo "Excel file created successfully at {$filename}.";
+} else {
+    echo "Error creating Excel file.";
+}
+```
+
 ## Customizing Styles
 
 ```php
-// Optional: Apply additional styles to a specific range (for example, changing the font for cells A1:C100)
-$spreadsheet = $excelWriter->getSpreadsheet(); // Implement a getter in ExcelWriter if required.
+// Optional: If you implement a getter for the spreadsheet:
+$spreadsheet = $excelWriter->getSpreadsheet();
 $spreadsheet->getActiveSheet()->getStyle('A1:C100')->applyFromArray([
     'font' => [
         'name' => 'Calibri',
