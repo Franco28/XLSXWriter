@@ -38,8 +38,24 @@ use XLSXWriter\ExcelWriter;
 
 $excelWriter = new ExcelWriter();
 
+// Suppose you want to override the default font size, type, and background color:
+$customHeaderStyle = [
+    'font' => [
+        'size' => 20,          // bigger font
+        'name' => 'Calibri',   // change to Calibri
+        'color' => [
+            'argb' => 'FF0000FF' // optional: change font color (blue)
+        ]
+    ],
+    'fill' => [
+        'startColor' => [
+            'argb' => 'FFFFEEEE' // pale background color
+        ]
+    ]
+];
+
 // Set headers (automatically styled)
-$excelWriter->setHeaders(['Name', 'Age', 'Email']);
+$excelWriter->setHeaders(['Name', 'Age', 'Email'], $customHeaderStyle);
 
 // Add data rows
 $excelWriter->addRow(['John Doe', 30, 'john@example.com']);
@@ -70,7 +86,24 @@ class ExcelController extends Controller
     {
         // Initialize XLSXWriter
         $excelWriter = new ExcelWriter();
-        $excelWriter->setHeaders(['Name', 'Age', 'Email'])
+
+        // Suppose you want to override the default font size, type, and background color:
+        $customHeaderStyle = [
+            'font' => [
+                'size' => 20,          // bigger font
+                'name' => 'Calibri',   // change to Calibri
+                'color' => [
+                    'argb' => 'FF0000FF' // optional: change font color (blue)
+                ]
+            ],
+            'fill' => [
+                'startColor' => [
+                    'argb' => 'FFFFEEEE' // pale background color
+                ]
+            ]
+        ];
+
+        $excelWriter->setHeaders(['Name', 'Age', 'Email'], $customHeaderStyle)
                     ->addRow(['John Doe', 30, 'john@example.com'])
                     ->addRow(['Jane Doe', 25, 'jane@example.com']);
 
@@ -96,8 +129,24 @@ $excelWriter = new ExcelWriter();
 // Set the offset to (3, 3) => D4
 $excelWriter->setOffset(3, 3);
 
+// Suppose you want to override the default font size, type, and background color:
+$customHeaderStyle = [
+    'font' => [
+        'size' => 20,          // bigger font
+        'name' => 'Calibri',   // change to Calibri
+        'color' => [
+            'argb' => 'FF0000FF' // optional: change font color (blue)
+        ]
+    ],
+    'fill' => [
+        'startColor' => [
+            'argb' => 'FFFFEEEE' // pale background color
+        ]
+    ]
+];
+
 // Define headers and rows
-$excelWriter->setHeaders(['Fecha', 'Total']);
+$excelWriter->setHeaders(['Fecha', 'Total'], $customHeaderStyle);
 $excelWriter->addRow(['2023-01-01', '1000']);
 $excelWriter->addRow(['2023-01-02', '1500']);
 
