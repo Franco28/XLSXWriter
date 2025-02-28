@@ -1,23 +1,45 @@
 {
   "name": "xlsxwriter/excel",
-  "description": "Convert data to excel file",
+  "description": "Convert data to Excel file",
   "type": "library",
   "license": "MIT",
   "require": {
-    "php": ">=8.0"
+    "php": ">=8.3",
+    "phpoffice/phpspreadsheet": "^1.28"
   },
-  "minimum-stability": "stable",
   "autoload": {
     "psr-4": {
       "XLSXWriter\\": "src/XLSXWriter/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "XLSXWriter\\Tests\\": "tests/"
+    }
+  },
+  "require-dev": {
+    "orchestra/testbench": "^8.0.6",
+    "phpunit/phpunit": "^9.5"
+  },
+  "minimum-stability": "stable",
   "authors": [
     {
-      "name": "Unknonw-Dev"
+      "name": "Unknown-Dev"
     }
   ],
-  "require-dev": {
-    "orchestra/testbench": "^8.0.6"
+  "config": {
+    "optimize-autoloader": true,
+    "platform": {
+      "php": "8.3.0"
+    }
+  },
+  "keywords": [
+    "excel",
+    "xlsx",
+    "writer",
+    "library"
+  ],
+  "scripts": {
+    "test": "vendor/bin/phpunit"
   }
 }

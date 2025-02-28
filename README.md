@@ -2,113 +2,99 @@
 
 ## Overview
 
-`XLSXWriter` is a PHP/Laravel library that allows you to easily convert data to an Excel file. It provides a simple and convenient way to generate Excel files with customizable features such as borders, font styles, and column widths.
+XLSXWriter is a PHP library built on top of [PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet) that allows you to easily convert data into an Excel (.xlsx) file. With its modular design, XLSXWriter provides a clean API for generating Excel files with customizable features such as headers, rows, borders, font styles, background colors, and more.
+
+> **Note:** This library requires PHP 8.3 or later.
+
+## Features
+
+- **Modular Architecture:**  
+  Separate classes handle building the spreadsheet, applying styles, and saving the file.
+- **Customizable Styling:**  
+  Easily customize fonts, colors, borders, and cell formats using PhpSpreadsheet’s style API.
+- **Robust Excel Generation:**  
+  Leverages PhpSpreadsheet to create real Excel files (.xlsx) with support for advanced features.
+- **Easy Integration:**  
+  Suitable for plain PHP projects or Laravel applications.
 
 ## Installation
 
-To use `XLSXWriter`, you can install it via Composer:
+Install XLSXWriter via Composer. This command will also install PhpSpreadsheet as a dependency:
 
 ```bash
-    composer require franco28dev/xlsxwriter
+composer require franco28dev/xlsxwriter
 ```
 
-## Usage
+## Using Examples
 
-#### Setting Excel File Properties
+### Basic Example
 
-```php
-    $writer->setTitle($title);
-    $writer->setSubject($subject);
-    $writer->setAuthor($author);
-    $writer->setCompany($company);
-    $writer->setKeywords($keywords);
-    $writer->setDescription($description);
-    $writer->setTempDir($tempdir);
-    $writer->setRightToLeft($isRightToLeft);
-```
-
-#### Writing to File
+> - Below is a simple example that creates an Excel file with headers and data rows, applying basic styling (such as bold headers with a yellow background and thin borders):
 
 ```php
-    $writer->writeToFile($filename);
-```
+require 'vendor/autoload.php';
 
-#### Writing Sheet Header
+use XLSXWriter\ExcelWriter;
 
-```php
-    $writer->writeSheetHeader($sheetName, $headerTypes, $columnOptions);
-```
+$excelWriter = new ExcelWriter();
 
-#### Writing Sheet Row
+// Set headers with custom styling
+$excelWriter->setHeaders(['Name', 'Age', 'Email']);
 
-```php
-    $writer->writeSheetRow($sheetName, $row, $rowOptions);
-```
+// Add data rows
+$excelWriter->addRow(['John Doe', 30, 'john@example.com']);
+$excelWriter->addRow(['Jane Doe', 25, 'jane@example.com']);
 
-#### Marking Merged Cell
-
-```php
-    $writer->markMergedCell($sheet_name, $start_cell_row, $start_cell_column, $end_cell_row, $end_cell_column);
-```
-
-#### Writing Entire Sheet
-
-```php
-    $writer->writeSheet($data, $sheet_name, $header_types);
-```
-
-## Example
-
-```php
-public function GenerateDataToExcel()
-{
-    // Start Buffer
-    ob_start();
-
-    // Add the first array to scope everything, the second array as header, third array as values for the row
-    $dataCajaDiaria = [
-        ['Date', 'Total Month Of July'],
-        [
-            date('Y-m-d H:i:s'),
-            '$150',
-        ],
-    ];
-
-    // Initialize the class
-    $writer = new XLSXWriter();
-
-    // Set the Author description for the excel file
-    $writer->setAuthor('Franco28 Dev');
-
-    // Set the title tab
-    $writer->writeSheet("July sales");
-
-    // The filename
-    $filename = 'july_sales.xlsx';
-
-    // Write the file
-    $writer->writeToFile($filename);
-
-    // Clean Buffer for the download
-    ob_get_clean();
-
-    // If you want you can check if the file was created or not
-    if (file_exists($filename)) {
-
-        // Generate the headers for the download,
-        // after the download the file will be deleted
-        header('Content-Description: File Transfer');
-        header("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($filename));
-        readfile($filename);
-        unlink($filename);
-    }
-
-    // Return the code to whatever you want
-    return view("sales.month");
+// Save the Excel file to disk
+$filename = 'output.xlsx';
+if ($excelWriter->write($filename)) {
+    echo "Excel file created successfully at {$filename}.";
+} else {
+    echo "Error creating Excel file.";
 }
+```
+
+## Advanced Usage in a Laravel Controller
+
+> - Here’s an example of how to integrate XLSXWriter in a Laravel controller to generate and download an Excel file:
+
+```php
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use XLSXWriter\ExcelWriter;
+
+class ExcelController extends Controller
+{
+    public function downloadExcel()
+    {
+        // Initialize XLSXWriter
+        $excelWriter = new ExcelWriter();
+        $excelWriter->setHeaders(['Name', 'Age', 'Email'])
+                    ->addRow(['John Doe', 30, 'john@example.com'])
+                    ->addRow(['Jane Doe', 25, 'jane@example.com']);
+
+        // Write the file to disk
+        $filename = 'download.xlsx';
+        if ($excelWriter->write($filename)) {
+            // Return file as a download and delete after sending
+            return response()->download($filename)->deleteFileAfterSend(true);
+        }
+
+        return response("Error creating Excel file.", 500);
+    }
+}
+```
+
+## Customizing Styles
+
+```php
+// Optional: Apply additional styles to a specific range (for example, changing the font for cells A1:C100)
+$spreadsheet = $excelWriter->getSpreadsheet(); // Implement a getter in ExcelWriter if required.
+$spreadsheet->getActiveSheet()->getStyle('A1:C100')->applyFromArray([
+    'font' => [
+        'name' => 'Calibri',
+        'size' => 11
+    ]
+]);
 ```
