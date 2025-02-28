@@ -1,5 +1,6 @@
 {
   "name": "xlsxwriter/excel",
+  "version": "1.0.0",
   "description": "Convert data to Excel file",
   "type": "library",
   "license": "MIT",
