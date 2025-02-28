@@ -66,19 +66,39 @@ class SpreadsheetBuilder
         $columnIndex = $this->startColumnIndex;
         $sheet = $this->spreadsheet->getActiveSheet();
 
-        // Use the array KEY as the visible header text, VALUE as the data type (if needed)
+        // We'll use this to map each header to a position in 'columnWidths'
+        $headerPosition = 0;
+
+        // 3) Write each header cell
         foreach ($headers as $headerName => $type) {
             $colLetter = $this->columnIndexToLetter($columnIndex);
+
+            // Write the header text (the array key)
             $sheet->setCellValue($colLetter . $this->currentRow, $headerName);
+
+            // 3.1) If 'columnWidths' is provided, check if there's a width for this column
+            if (isset($customStyle['columnWidths'][$headerPosition])) {
+                $desiredWidth = $customStyle['columnWidths'][$headerPosition];
+
+                if ($desiredWidth === 'auto') {
+                    // Enable auto-sizing for this column
+                    $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+                } else {
+                    // Set a fixed width (e.g., 20, 30, etc.)
+                    $sheet->getColumnDimension($colLetter)->setWidth($desiredWidth);
+                }
+            }
+
             $columnIndex++;
+            $headerPosition++;
         }
 
-        // 3) Calculate the header range for styling (e.g., D4:F4)
+        // 4) Calculate the header range for styling (e.g., D4:F4)
         $firstColLetter = $this->columnIndexToLetter($this->startColumnIndex);
         $lastColLetter  = $this->columnIndexToLetter($columnIndex - 1);
         $range          = "{$firstColLetter}{$this->currentRow}:{$lastColLetter}{$this->currentRow}";
 
-        // 4) Define default style for the headers
+        // 5) Define default style for the headers
         $defaultStyle = [
             'font' => [
                 'bold' => true,
@@ -99,18 +119,18 @@ class SpreadsheetBuilder
             ]
         ];
 
-        // 5) Merge user-provided style with the default style
+        // 6) Merge user-provided style with the default style
         $finalStyle = array_replace_recursive($defaultStyle, $customStyle);
 
-        // 6) If the user explicitly sets 'borders' => false, remove borders entirely
+        // 7) If the user explicitly sets 'borders' => false, remove borders entirely
         if (isset($customStyle['borders']) && $customStyle['borders'] === false) {
             unset($finalStyle['borders']);
         }
 
-        // 7) Apply the merged style to the header range
+        // 8) Apply the merged style to the header range
         $sheet->getStyle($range)->applyFromArray($finalStyle);
 
-        // 8) Move down one row for data
+        // 9) Move down one row for data
         $this->currentRow++;
     }
 
