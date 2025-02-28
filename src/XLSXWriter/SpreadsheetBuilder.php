@@ -102,7 +102,7 @@ class SpreadsheetBuilder
         $defaultStyle = [
             'font' => [
                 'bold' => true,
-                'size' => 16,
+                'size' => 15,
                 'name' => 'Arial'
             ],
             'fill' => [
@@ -157,8 +157,19 @@ class SpreadsheetBuilder
         $lastColLetter  = $this->columnIndexToLetter($columnIndex - 1);
         $range          = "{$firstColLetter}{$this->currentRow}:{$lastColLetter}{$this->currentRow}";
 
-        // 3) Define a default style (thin borders)
+        // 3) Define default style for the rows
         $defaultStyle = [
+            'font' => [
+                'bold' => false,
+                'size' => 12,
+                'name' => 'Arial'
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => [
+                    'argb' => 'FFFFFF' // Default background color (white)
+                ]
+            ],
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
