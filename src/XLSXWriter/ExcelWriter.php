@@ -33,7 +33,7 @@ class ExcelWriter
      * Sets the headers (first row of the table).
      *
      * @param array $headers
-     * @param array $customStyle
+     * @param array $customStyle e.g. ['borders' => false] to remove borders
      * @return $this
      */
     public function setHeaders(array $headers, array $customStyle = []): self
@@ -46,9 +46,10 @@ class ExcelWriter
      * Adds a row of data to the sheet.
      *
      * @param array $row
+     * @param array $customStyle e.g. ['borders' => false] to remove borders
      * @return $this
      */
-    public function addRow(array $row): self
+    public function addRow(array $row, array $customStyle = []): self
     {
         $this->spreadsheetBuilder->addRow($row);
         return $this;

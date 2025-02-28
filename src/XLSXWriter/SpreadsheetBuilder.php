@@ -55,7 +55,7 @@ class SpreadsheetBuilder
      * Sets the headers (first row of the table) with a custom style.
      *
      * @param array $headers
-     * @param array $customStyle
+     * @param array $customStyle e.g. ['borders' => false] to remove borders
      */
     public function setHeaders(array $headers, array $customStyle = []): void
     {
@@ -82,7 +82,7 @@ class SpreadsheetBuilder
         $defaultStyle = [
             'font' => [
                 'bold' => true,
-                'size' => 16,         // Default font size
+                'size' => 16,
                 'name' => 'Arial'
             ],
             'fill' => [
@@ -99,39 +99,46 @@ class SpreadsheetBuilder
             ]
         ];
 
-        // 5) Merge the user-provided style with the default style
-        //    array_replace_recursive() ensures nested keys are overwritten properly.
+        // 5) Merge user-provided style with the default style
         $finalStyle = array_replace_recursive($defaultStyle, $customStyle);
 
-        // 6) Apply the merged style to the header range
+        // 6) If the user explicitly sets 'borders' => false, remove borders entirely
+        if (isset($customStyle['borders']) && $customStyle['borders'] === false) {
+            unset($finalStyle['borders']);
+        }
+
+        // 7) Apply the merged style to the header range
         $sheet->getStyle($range)->applyFromArray($finalStyle);
 
-        // 7) Move down one row for data
+        // 8) Move down one row for data
         $this->currentRow++;
     }
 
     /**
-     * Adds a row of data to the sheet with basic borders.
+     * Adds a row of data to the sheet, allowing optional custom style/borders.
      *
      * @param array $row
+     * @param array $customStyle e.g. ['borders' => false] to remove borders
      */
-    public function addRow(array $row): void
+    public function addRow(array $row, array $customStyle = []): void
     {
         $columnIndex = $this->startColumnIndex;
+        $sheet = $this->spreadsheet->getActiveSheet();
 
+        // 1) Write each cell
         foreach ($row as $cell) {
             $colLetter = $this->columnIndexToLetter($columnIndex);
-            $this->spreadsheet->getActiveSheet()->setCellValue($colLetter . $this->currentRow, $cell);
+            $sheet->setCellValue($colLetter . $this->currentRow, $cell);
             $columnIndex++;
         }
 
-        // Calculate the range for the newly added row (e.g., D5:F5)
+        // 2) Calculate the range for the newly added row (e.g., D5:F5)
         $firstColLetter = $this->columnIndexToLetter($this->startColumnIndex);
         $lastColLetter  = $this->columnIndexToLetter($columnIndex - 1);
         $range          = "{$firstColLetter}{$this->currentRow}:{$lastColLetter}{$this->currentRow}";
 
-        // Apply simple border styling
-        $dataStyle = [
+        // 3) Define a default style (thin borders)
+        $defaultStyle = [
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
@@ -139,8 +146,19 @@ class SpreadsheetBuilder
                 ]
             ]
         ];
-        $this->spreadsheet->getActiveSheet()->getStyle($range)->applyFromArray($dataStyle);
 
+        // 4) Merge user-provided style
+        $finalStyle = array_replace_recursive($defaultStyle, $customStyle);
+
+        // 5) If the user sets 'borders' => false, remove borders entirely
+        if (isset($customStyle['borders']) && $customStyle['borders'] === false) {
+            unset($finalStyle['borders']);
+        }
+
+        // 6) Apply the final style to the row
+        $sheet->getStyle($range)->applyFromArray($finalStyle);
+
+        // 7) Move to the next row
         $this->currentRow++;
     }
 
