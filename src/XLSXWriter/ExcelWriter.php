@@ -30,6 +30,78 @@ class ExcelWriter
     }
 
     /**
+     * Sets default header style (merged into the built-in header style).
+     *
+     * @param array $style
+     * @return $this
+     */
+    public function setDefaultHeaderStyle(array $style): self
+    {
+        $this->spreadsheetBuilder->setDefaultHeaderStyle($style);
+        return $this;
+    }
+
+    /**
+     * Sets default row style (merged into the built-in row style).
+     *
+     * @param array $style
+     * @return $this
+     */
+    public function setDefaultRowStyle(array $style): self
+    {
+        $this->spreadsheetBuilder->setDefaultRowStyle($style);
+        return $this;
+    }
+
+    /**
+     * Sets default column widths for headers.
+     *
+     * @param array $widths
+     * @return $this
+     */
+    public function setColumnWidths(array $widths): self
+    {
+        $this->spreadsheetBuilder->setColumnWidths($widths);
+        return $this;
+    }
+
+    /**
+     * Enables or disables basic formula injection protection.
+     *
+     * @param bool $enabled
+     * @return $this
+     */
+    public function setSanitizeFormulas(bool $enabled): self
+    {
+        $this->spreadsheetBuilder->setSanitizeFormulas($enabled);
+        return $this;
+    }
+
+    /**
+     * Sets the active sheet title.
+     *
+     * @param string $title
+     * @return $this
+     */
+    public function setSheetTitle(string $title): self
+    {
+        $this->spreadsheetBuilder->setSheetTitle($title);
+        return $this;
+    }
+
+    /**
+     * Freezes the sheet at the specified cell (e.g. "A2").
+     *
+     * @param string $cell
+     * @return $this
+     */
+    public function freezePane(string $cell): self
+    {
+        $this->spreadsheetBuilder->freezePane($cell);
+        return $this;
+    }
+
+    /**
      * Sets the headers (first row of the table).
      *
      * @param array $headers
@@ -51,7 +123,20 @@ class ExcelWriter
      */
     public function addRow(array $row, array $customStyle = []): self
     {
-        $this->spreadsheetBuilder->addRow($row);
+        $this->spreadsheetBuilder->addRow($row, $customStyle);
+        return $this;
+    }
+
+    /**
+     * Adds multiple rows to the sheet.
+     *
+     * @param array $rows
+     * @param array $customStyle
+     * @return $this
+     */
+    public function addRows(array $rows, array $customStyle = []): self
+    {
+        $this->spreadsheetBuilder->addRows($rows, $customStyle);
         return $this;
     }
 
@@ -79,5 +164,15 @@ class ExcelWriter
     {
         $spreadsheet = $this->spreadsheetBuilder->build();
         return $this->fileSaver->save($spreadsheet, $filePath);
+    }
+
+    /**
+     * Returns the last error message from write(), if any.
+     *
+     * @return string|null
+     */
+    public function getLastError(): ?string
+    {
+        return $this->fileSaver->getLastError();
     }
 }

@@ -1,11 +1,11 @@
 {
   "name": "xlsxwriter/excel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Convert data to Excel file",
   "type": "library",
   "license": "MIT",
   "require": {
-    "php": ">=8.3",
+    "php": ">=8.4",
     "phpoffice/phpspreadsheet": "^1.28"
   },
   "autoload": {
@@ -31,7 +31,7 @@
   "config": {
     "optimize-autoloader": true,
     "platform": {
-      "php": "8.3.0"
+      "php": "8.4.0"
     }
   },
   "keywords": [
