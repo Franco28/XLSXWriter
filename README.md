@@ -4,7 +4,7 @@
 
 XLSXWriter is a small PHP library built on top of [PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet). It provides a simple, chainable API for generating `.xlsx` files with headers, rows, offsets, and optional styling.
 
-> **Requirement:** PHP 8.4+.
+> **Requirement:** PHP 8.5+.
 
 ## Features
 
@@ -209,8 +209,8 @@ ExcelWriter::write(string $filePath): bool
 
 ## Compatibility
 
-- PHP 8.4+
-- PhpSpreadsheet ^1.28
+- PHP 8.5+
+- PhpSpreadsheet ^5.4
 
 ## Testing
 
